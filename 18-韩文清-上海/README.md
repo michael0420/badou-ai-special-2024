@@ -1,0 +1,3 @@
+复习python语法
+配置pycharm环境
+学习github流程
