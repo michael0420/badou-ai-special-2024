@@ -1,0 +1,31 @@
+import cv2
+import numpy
+import matplotlib.pyplot
+
+img = cv2.imread("lenna.png")
+h1, w1 = img.shape[:2]
+img_gray = numpy.zeros([h1, w1], img.dtype)
+img_2 = numpy.zeros([h1, w1], img.dtype)
+for i in range(h1):#图像灰值化处理
+    for j in range(w1):
+        a = img[i, j]
+        img_gray[i, j] = int(a[0] * 0.11 + a[1] * 0.59+a[2] * 0.3)
+
+for i in range(h1):#图像二值化处理
+    for j in range(w1):
+        if (img_gray[i, j] <= 128):
+            img_2[i, j] = 0
+        else:
+            img_2[i, j] = 1
+
+matplotlib.pyplot.subplot(221)
+img = matplotlib.pyplot.imread("lenna.png")
+matplotlib.pyplot.title("Original")
+matplotlib.pyplot.imshow(img)
+matplotlib.pyplot.subplot(222)
+matplotlib.pyplot.title("gray")
+matplotlib.pyplot.imshow(img_gray,cmap='gray')
+matplotlib.pyplot.subplot(223)
+matplotlib.pyplot.title("Binarization")
+matplotlib.pyplot.imshow(img_2,cmap='gray')
+matplotlib.pyplot.show()
