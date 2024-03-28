@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Black">
-    <option name="executionMode" value="BINARY" />
-    <option name="pathToExecutable" value="F:\anaconda3\Scripts\black.exe" />
-    <option name="sdkName" value="Python 3.7 (badou)" />
-  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.7 (badou)" project-jdk-type="Python SDK" />
-  <component name="PyPackaging">
-    <option name="earlyReleasesAsUpgrades" value="true" />
-  </component>
 </project>
