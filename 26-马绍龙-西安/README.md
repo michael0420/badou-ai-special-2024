@@ -1,1 +1,1 @@
-# My first file.
+# 作业规则为每周一个文件夹，命名为weekN
