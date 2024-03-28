@@ -1,1 +1,0 @@
-Key points of homework
