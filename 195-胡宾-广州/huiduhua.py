@@ -2,12 +2,13 @@ from skimage.color import rgb2gray
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+
 tupian = cv2.imread('lenna.png')
 tupian = cv2.cvtColor(tupian, cv2.COLOR_BGR2RGB)
 print(tupian)
-#灰度化
-h, w = tupian.shape[:2] # 获取图片的high和wide
-tupian_gray = np.zeros([h, w], tupian.dtype) # 创建一张和当前图片大小一样的单通道图片
+# 灰度化
+h, w = tupian.shape[:2]  # 获取图片的high和wide
+tupian_gray = np.zeros([h, w], tupian.dtype)  # 创建一张和当前图片大小一样的单通道图片
 for i in range(h):
     for j in range(w):
         a = tupian[i, j]
