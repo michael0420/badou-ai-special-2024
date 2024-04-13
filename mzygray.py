@@ -1,4 +1,5 @@
 from skimage.color import rgb2gray
+# 表示从 skimage.color 模块中导入名为 rgb2gray 的函数。rgb2gray 函数用于将 RGB 彩色图像转换为灰度图像，即将彩色图像的每个像素的红、绿、蓝三个通道的值进行加权平均，生成一个灰度值表示图像的亮度。
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -31,6 +32,8 @@ print(img)
 
 # 灰度化
 img_gray = rgb2gray(img)
+cv2.imshow("dasdadsa",img_gray)
+cv2.waitKey()
 #img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 #img_gray = img
 plt.subplot(222)
