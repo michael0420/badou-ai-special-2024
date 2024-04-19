@@ -1,0 +1,42 @@
+import numpy as np
+import cv2
+
+
+def dbline_inter(img,out_size):
+    sh, sw, channel = img.shape
+    oh, ow = out_size[0], out_size[1]
+    print('原始高,原始宽为', sh,sw)
+    print('输出高,输出宽为', oh,ow)
+    blh = float(sh)/oh
+    blw = float(sw)/ow
+    if sh == oh and sw == ow:
+        return img.copy()
+    op = np.zeros((oh,ow,3),dtype=np.uint8)
+    for i in range(channel):
+        for oy in range(oh):
+            for ox in range(ow):
+                sx = (ox + 0.5)*blw - 0.5
+                sy = (oy + 0.5)*blh - 0.5
+
+                ###寻找在原图上映射点的周围四个点的x,y坐标
+                sx0 = int(float(sx))
+                sx1 = min(sx0+1,sw-1)
+                sy0 = int(float(sy))
+                sy1 = min(sy0+1,sh-1)
+
+                ##计算临时点R1,R2
+                tR1 = (sx1-sx)*img[sy0,sx0,i] +(sx-sx0)*img[sy0,sx1,i]
+                tR2 = (sx1-sx)*img[sy1,sx0,i] +(sx-sx0)*img[sy1,sx1,i]
+                op[oy,ox,i] = int((sy1 - sy) * tR1 + (sy - sy0) * tR2)
+
+    return op
+
+
+if __name__ =='__main__':
+    img = cv2.imread('lenna.png')
+    result = dbline_inter(img,(700,700))
+    cv2.imshow('dbline inter',result)
+    cv2.waitKey(0)
+
+
+

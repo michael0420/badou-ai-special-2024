@@ -1,0 +1,15 @@
+import cv2
+img = cv2.imread('lenna.png')
+x = cv2.Sobel(img,cv2.CV_16S,1,0)
+y = cv2.Sobel(img,cv2.CV_16S,0,1)
+
+x0 = cv2.convertScaleAbs(x)
+y0 = cv2.convertScaleAbs(y)
+
+result = cv2.addWeighted(x0,0.5,y0,0.5,0)
+cv2.imshow('x0',x0)
+cv2.imshow('y0',y0)
+cv2.imshow('Result',result)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -1,0 +1,42 @@
+# 直方图均衡化
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+img = cv2.imread("lenna.png",1)
+
+# 灰度化
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# cv2.imshow("img_gray",gray)
+# cv2.waitKey()
+
+# 灰度图像直方图均衡化
+"""
+它的基本思想是对图像中像素个数多的灰度级进行展宽，
+而对图像中像素个数少的灰度进行压缩，从而扩展像元取值的动态范围，
+提高了对比度和灰度色调的变化，使图像更加清晰。
+"""
+dst = cv2.equalizeHist(gray)
+
+# 直方图
+# https://download.csdn.net/blog/column/9886188/104596171
+"""
+cv2.calcHist(images, channels, mask, histSize, ranges[, hist[, accumulate ]]) ->hist
+
+imaes:输入的图像
+channels:选择图像的通道
+mask:掩膜，是一个大小和image一样的np数组，其中把需要处理的部分指定为1，不需要处理的部分指定为0，一般设置为None，表示处理整幅图像
+histSize:使用多少个bin(柱子)，一般为256
+ranges:像素值的范围，一般为[0,255]表示0~255
+后面两个参数基本不用管。
+注意，除了mask，其他四个参数都要带[]号。
+"""
+hist = cv2.calcHist([dst],[0],None,[256],[0,256])
+
+plt.figure()
+plt.hist(dst.ravel(),256)
+plt.show()
+
+cv2.imshow("Histogram Equalization",np.hstack([gray,dst]))
+cv2.waitKey(0)

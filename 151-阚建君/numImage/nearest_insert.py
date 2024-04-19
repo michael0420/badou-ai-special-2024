@@ -3,12 +3,12 @@ import numpy as np
 def insert_up(img,high,wide):
     height, width, channels = img.shape
     changeImage = np.zeros((high, wide, channels), np.uint8)
-    change_height = high/height     #缩放倍数
-    change_width = wide/width
+    change_height = height/high    #缩放倍数
+    change_width = width/wide
     for i in range(high):
         for j in range(wide):
-            x = int(i/change_height + 0.5)  # 先向上加到整数，再向下取整找到最邻近的点
-            y = int(j/change_width + 0.5)
+            x = int(i*change_height + 0.5)  # 先向上加到整数，再向下取整找到最邻近的点 其实就是四舍五入
+            y = int(j*change_width + 0.5)
             changeImage[i, j] = img[x, y]
     return changeImage
 

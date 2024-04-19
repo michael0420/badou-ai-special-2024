@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+"""
+@author: FANGJINPING
+
+彩色图像的灰度化、二值化、临近插值
+"""
+from skimage.color import rgb2gray
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+import cv2
+
+
+# 灰度化
+def function1(img):
+ h, w = img.shape[:2]  # 获取图片的high和wide
+ img_gray = np.zeros([h, w], img.dtype)  # 创建一张和当前图片大小一样的单通道图片
+ for i in range(h):
+    for j in range(w):
+        m = img[i, j]  # 取出当前high和wide中的BGR坐标
+        img_gray[i, j] = int(m[0] * 0.11 + m[1] * 0.59 + m[2] * 0.3)  # 将BGR坐标转化为gray坐标并赋值给新图像
+ return  img_gray
+
+# 二值法
+def function2(img):
+    img_gray2 = rgb2gray(img)
+    img_binary = np.where(img_gray2 >= 0.5, 1, 0)
+    return img_binary
+
+# 临近插值
+def function3(img):
+    height, width, channels = img.shape
+    emptyImage = np.zeros((900, 900, channels), np.uint8)
+    sh = 900 / height
+    sw = 900 / width
+    for i in range(900):
+        for j in range(900):
+            x = int(i / sh + 0.5)  # int(),转为整型，使用向下取整。
+            y = int(j / sw + 0.5)
+            emptyImage[i, j] = img[x, y]
+    return emptyImage
+
+#调用函数
+img = cv2.imread(r"D:\baduzl\badou\2\dama\lenna.png")
+img_gray1=function1(img)
+img_binary1=function2(img)
+img_emptyImage1=function3(img)
+print(img_gray1)
+print(img_binary1)
+print(img_emptyImage1)
+
+
+#展示原图
+plt.subplot(221)
+img = plt.imread((r"D:\baduzl\badou\2\dama\lenna.png"))
+plt.imshow(img)
+
+#展示灰度图
+plt.subplot(222)
+plt.imshow(img_gray1, cmap='gray')
+
+#展示二值化
+
+plt.subplot(223)
+plt.imshow(img_binary1, cmap='gray')
+
+#展示临近插值
+cv2.imshow("nearest interp", img_emptyImage1)
+plt.show()
+
+

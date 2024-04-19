@@ -1,0 +1,50 @@
+# sobel边缘检测
+import cv2
+
+img = cv2.imread("lenna.png",0)
+"""
+函数cv2.Sobel(src, ddepth, dx, dy[, ksize[, scale[, delta[, borderType]]]])
+
+概述：利用Sobel算子进行图像梯度计算
+
+参数：
+
+    src：输入图像
+    ddepth: 输出图像的深度（可以理解为数据类型），-1表示与原图像相同的深度
+    dx,dy:当组合为dx=1,dy=0时求x方向的一阶导数，当组合为dx=0,dy=1时求y方向的一阶导数（如果同时为1，通常得不到想要的结果）
+    ksize:（可选参数）Sobel算子的大小，必须是1,3,5或者7,默认为3。求X方向和Y方向一阶导数时，卷积核分别为：
+
+    scale:（可选参数）将梯度计算得到的数值放大的比例系数，效果通常使梯度图更亮，默认为1
+    delta:（可选参数）在将目标图像存储进多维数组前，可以将每个像素值增加delta，默认为0
+    borderType:（可选参数）决定图像在进行滤波操作（卷积）时边沿像素的处理方式，默认为BORDER_DEFAULT
+
+返回值：
+
+梯度图
+
+细节讲解：
+
+1. 图像深度
+
+图像深度是指存储每个像素值所用的位数，例如cv2.CV_8U，指的是8位无符号数，取值范围为0~255，超出范围则会被截断（截断指的是，当数值大于255保留为255，当数值小于0保留为0，其余不变）。
+
+具体还有：CV_16S（16位无符号数），CV_16U（16位有符号数），CV_32F（32位浮点数），CV_64F（64位浮点数）
+
+e.g.                      
+原文链接：https://blog.csdn.net/weixin_36670529/article/details/113755647
+
+"""
+x = cv2.Sobel(img,cv2.CV_16S,1,0)
+y = cv2.Sobel(img,cv2.CV_16S,0,1)
+# 转回uint8
+absX = cv2.convertScaleAbs(x)
+absY = cv2.convertScaleAbs(y)
+
+dst = cv2.addWeighted(absX,0.5,absY,0.5,0)
+
+cv2.imshow("absX",absX)
+cv2.imshow("absY",absY)
+cv2.imshow("result",dst)
+
+cv2.waitKey()
+cv2.destroyAllWindows()

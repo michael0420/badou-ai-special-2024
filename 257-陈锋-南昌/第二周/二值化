@@ -1,0 +1,34 @@
+###########  二值化  ###########
+#方法一：
+import cv2
+from skimage.color import rgb2gray
+
+img=cv2.imread('lenna02.jpg')
+img_binary=rgb2gray(img)
+rows,cols=img_binary.shape
+for i in range(rows):
+    for j in range(cols):
+        if (img_binary[i,j]<=0.5):
+            img_binary[i,j]=0
+        else:
+            img_binary[i,j]=1
+print(img_binary)
+print("image show binary:%s"%img_binary)
+cv2.imshow("image show binary",img_binary)
+cv2.waitKey()    #阻塞进程断开，显示图像
+
+#方法二：
+import cv2
+import numpy as np
+from skimage.color import rgb2gray
+import matplotlib.pyplot as plt
+
+img=cv2.imread('lenna02.jpg')
+img_gray=rgb2gray(img)
+img_binary = np.where(img_gray >= 0.5, 1, 0)
+print("-----imge_binary------")
+print(img_gray)
+print("image show binary:%s"%img_gray)
+plt.subplot(221)
+plt.imshow(img_binary, cmap='gray')
+plt.show()

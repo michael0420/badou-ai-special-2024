@@ -1,0 +1,54 @@
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+def C(rk):
+   hist, bins = np.histogram(rk, 256, [0, 256])
+#计算累计分布函数
+   return hist.cumsum()
+
+#计算灰度均衡化映射
+def T(rk):
+    cdf = C(rk)
+    cdf = (cdf - cdf.min()) * (255 - 0) / (cdf.max() - cdf.min()) + 0
+    return cdf.astype('uint8')
+
+#读取图片
+img = cv.imread(r"D:\baduzl\badou\2\dama\lenna.png", 0)
+#将二维数字图像矩阵转变为一维向量
+rk = img.flatten()
+
+#原始图
+plt.hist(rk, 256, [0, 255], color = 'r')
+cv.imshow("old_img",img)
+
+#均衡化
+imgDst = T(rk)[img]
+cv.imshow("new_img",imgDst)
+plt.hist(imgDst.flatten(), 256, [0, 255], color = 'b')
+
+plt.show()
+
+
+
+'''
+# 彩色图像直方图均衡化
+# img = cv2.imread(r"D:\baduzl\badou\2\dama\lenna.png", 1)
+# cv2.imshow("src", img)
+#
+# # 彩色图像均衡化,需要分解通道 对每一个通道均衡化
+# (b, g, r) = cv2.split(img)
+# bH = cv2.equalizeHist(b)
+# gH = cv2.equalizeHist(g)
+# rH = cv2.equalizeHist(r)
+# # 合并每一个通道
+# result = cv2.merge((bH, gH, rH))
+# cv2.imshow("dst_rgb", result)
+#  # 直方图
+# hist = cv2.calcHist([img],[0],None,[256],[0,256])
+#
+# plt.figure()
+# plt.hist(img.ravel(), 256)
+# plt.show()
+# cv2.waitKey(0)
+

@@ -1,0 +1,40 @@
+
+import cv2 as cv
+import matplotlib.pyplot as plt
+import  numpy as np
+
+src=cv.imread(r"D:\baduzl\badou\2\dama\lenna.png", 0)  #以灰度图方式读入
+img=src.copy()
+
+#计算sobel卷积结果
+x=cv.Sobel(img,cv.CV_16S,1,0)
+y=cv.Sobel(img,cv.CV_16S,0,1)
+
+
+#转换数据，并求合并
+
+Scale_absX=cv.convertScaleAbs(x)  #格式转换函数
+Scale_absY=cv.convertScaleAbs(y)
+
+'''
+由于Sobel算子是在两个方向计算的，最后还需要用cv2.addWeighted(...)函数将其组合起来
+。其函数原型为：
+dst = cv2.addWeighted(src1, alpha, src2, beta, gamma[, dst[, dtype]])  
+其中alpha是第一幅图片中元素的权重，beta是第二个的权重，
+gamma是加到最后结果上的一个值。
+'''
+
+result=cv.addWeighted(Scale_absX,0.5,Scale_absY,0.5,0)  #图像混合
+
+#显示图像
+
+fig,axes=plt.subplots(nrows=2,ncols=2,figsize=(10,8),dpi=100)
+axes[0,0].imshow(img,cmap=plt.cm.gray)
+axes[0,0].set_title("img")
+axes[0,1].imshow(result,cmap=plt.cm.gray)
+axes[0,1].set_title("result")
+axes[1,0].imshow(Scale_absX,cmap=plt.cm.gray)
+axes[1,0].set_title("Scale_absX")
+axes[1,1].imshow(Scale_absY,cmap=plt.cm.gray)
+axes[1,1].set_title("Scale_absY")
+plt.show()
