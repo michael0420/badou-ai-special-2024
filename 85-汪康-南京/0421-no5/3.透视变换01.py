@@ -3,7 +3,7 @@
 
 '''
 import numpy as np
-
+# 1.手写warpMatrix
 def WarpPerspectiveMatrix(src,dst):
     assert src.shape[0] == dst.shape[0] and src.shape[0] >= 4
 
@@ -45,6 +45,7 @@ if __name__ == '__main__':
     print(warpMatrix)
 
     import cv2
+    # 2.使用cv2自带api
     img = cv2.imread('photo1.jpg')
 
     result3 = img.copy()
