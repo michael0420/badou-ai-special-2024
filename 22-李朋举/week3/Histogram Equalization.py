@@ -13,7 +13,6 @@ equalizeHist—直方图均衡化 - 使直方图大致平和
 src：图像矩阵(单通道图像)
 dst：默认即可
 '''
-
 # 获取灰度图像
 img = cv2.imread("D:\cv_workspace\picture\lenna.png", 1)
 
@@ -21,10 +20,8 @@ img = cv2.imread("D:\cv_workspace\picture\lenna.png", 1)
 #                     常见的code有 cv2.COLORBGR2GRAY,cv2.COLORBGR2HSV,cv2.COLOR_BGR2RGB
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 # cv2.imshow("image_gray", gray)
-
 # 灰度图像直方图均衡化
 dst = cv2.equalizeHist(gray)
-
 # 计算直方图
 # cv2.calcHist(images,channels,mask,histSize,ranges)
 # images: 原图像图像格式为 uint8 或 ?oat32。当传入函数时应 用中括号 [] 括来例如[img]
@@ -41,17 +38,14 @@ hist = cv2.calcHist([dst], [0], None, [256], [0, 256])
 # edgecolor:边框颜色
 # frameon:是否显示边框
 plt.figure()
-
 # 绘制直方图plt.hist(): ，一种特殊的柱状图。
 # 将统计值的范围分段，即将整个值的范围分成一系列间隔，然后计算每个间隔中有多少值。
 # 直方图也可以被归一化以显示“相对”频率。 然后，它显示了属于几个类别中的每个类别的占比，其高度总和等于1。
 # img.ravel()–把多维数组转化成一维数组  因为hist函数只支持一维的数组（数组下标为横坐标，值为纵坐标） 256 表示横坐标的最大值为256，有256条柱
 plt.hist(dst.ravel(), 256)
 plt.show()
-
 cv2.imshow("Histogram Equalization", np.hstack([gray, dst]))
 cv2.waitKey(10000)
-
 '''
 # 彩色图像直方图均衡化
 img = cv2.imread("lenna.png", 1)
@@ -65,7 +59,6 @@ rH = cv2.equalizeHist(r)
 # 合并每一个通道
 result = cv2.merge((bH, gH, rH))
 cv2.imshow("dst_rgb", result)
-
 cv2.waitKey(0)
 '''
 
@@ -73,6 +66,16 @@ cv2.waitKey(0)
 
 
 ''''
+cv2.imread(filename, flags)
+参数：
+filepath：读入imge的完整路径
+flags：标志位，{cv2.IMREAD_COLOR，cv2.IMREAD_GRAYSCALE，cv2.IMREAD_UNCHANGED}
+       cv2.IMREAD_COLOR：默认参数，读入一副彩色图片，忽略alpha通道，可用1作为实参替代
+       cv2.IMREAD_GRAYSCALE：读入灰度图片，可用0作为实参替代
+       cv2.IMREAD_UNCHANGED：顾名思义，读入完整图片，包括alpha通道，可用-1作为实参替代
+    PS：alpha通道，又称A通道，是一个8位的灰度通道，该通道用256级灰度来记录图像中的透明度复信息，定义透明、不透明和半透明区域， 
+        其中黑表示全透明，白表示不透明，灰表示半透明
+
 plt.hist()
 【常用参数解】
 x: 作直方图所要用的数据，必须是一维数组；多维数组可以先进行扁平化再作图；必选参数；

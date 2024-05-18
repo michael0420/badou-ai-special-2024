@@ -1,0 +1,28 @@
+import numpy as np
+import cv2
+import sys
+import random
+
+def paper_noise(image,percetage):
+    result = image
+    numon =int(percetage*image.shape[0]*image.shape[1])
+    for i in range(numon):
+        randX= np.random.randint(0,image.shape[0]-1)
+        randY= np.random.randint(0,image.shape[1]-1)
+        if random.random()<=0.5:
+            result[randX,randY]=0
+        else:
+            result[randX,randY]=255
+    return result
+
+
+img = cv2.imread('lenna.png')
+img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+img_gray_noise = paper_noise(img_gray,0.1)
+color_noise = paper_noise(img,0.8)
+cv2.imshow('img_gray',img_gray)
+cv2.imshow('img_gray_noise',img_gray_noise)
+cv2.imshow('color_img',img)
+cv2.imshow('color_noise',color_noise)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

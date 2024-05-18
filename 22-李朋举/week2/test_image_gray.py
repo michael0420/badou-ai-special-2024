@@ -88,3 +88,23 @@ plt.show()
 
 
 
+
+
+'''
+image.shape[:3] 表示取彩色图片的高、宽、通道 
+具体的解释为：
+  1)输出 height，即获取图像的高度，图像的高度为shape的第一个值（维度）------>print(image.shape[0])
+  2)输出 width,获取图像的宽度，图像的宽度为shape的第二个值（维度）print(image.shape[1])
+  3)输出通道数，彩色图像为3，灰度图像报错，shape没有第三个参数，只有(height,width)
+              获取图像通道数目，图像的通道数目为shape的第三个值（维度）,加载进来的图像都有三个通道，三个通道是图像的BGR print(image.shape[2])
+  备注：
+      OpenCV中图像读入的数据格式是numpy的ndarray数据格式。是BGR格式，取值范围是[0,255].
+'''
+
+'''
+np.zeros() 函数是 NumPy 数组库的一部分，用于生成元素全部为 0 的数组
+numpy.zeros(shape, dtype=float, order='C')
+     shape: 这是一个必需参数，指定了数组的维度。例如，shape=3 创建一个长度为 3 的一维数组，而 shape=(2,3) 则创建一个 2x3 的二维数组。
+     dtype: 这个参数允许用户指定数组中元素的数据类型。常见类型包括 numpy.int32, numpy.float64 等。如果不指定，NumPy 默认使用 float64 类型。
+     order: 虽然不常用，这个参数允许高级用户优化他们的数组布局，以便更高效地进行特定的数学运算。大多数情况下，默认的 'C' 顺序就足够了。
+'''

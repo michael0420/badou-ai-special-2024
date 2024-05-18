@@ -1,5 +1,6 @@
 from numpy import random
 import numpy as  np
+import matplotlib.pyplot as  plt
 
 MySample=random.randint(0,100,(10,3)).astype(np.float) #随机生成10行三列的矩阵,值为浮点型,在0-100之间
 np.set_printoptions(precision=2)  #矩阵值保留两位小数
@@ -52,7 +53,17 @@ UT = [b[:,c[i]] for i in range(k)]   #取前两个特征值对应的特征向量
 print('排序后前两列的特征向量为：',UT)
 U=np.transpose(UT)   #矩阵转置，转换为2维矩阵
 print('降维转换矩阵为：',U)    #降维成功。三维矩阵变为了二维矩阵，PCA实现
+Z=np.dot(MySample,U)
+print('降维后的原矩阵',Z)
 
+#画图
+m=[]
+n=[]
+for i in range(len(Z)):
+      m.append(Z[i][0])
+      n.append(Z[i][1])
+plt.scatter(m,n,c='r',marker='*')
+plt.show()
 
 
 

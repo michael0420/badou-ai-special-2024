@@ -1,0 +1,27 @@
+import random
+
+import cv2 as cv
+import numpy as np
+
+
+def SaltNoise(src, rate):
+    noise_img = src
+    noise_num = int(noise_img.shape[0] * noise_img.shape[1] * rate)
+    for i in range(noise_num):
+        noise_x = random.randint(0, src.shape[0] - 1)
+        noise_y = random.randint(0, src.shape[1] - 1)
+        if random.random() <= 0.5:
+            noise_img[noise_y, noise_x] = 0
+        else:
+            noise_img[noise_y, noise_x] = 255
+    return noise_img
+
+
+if __name__ == '__main__':
+    gray = cv.imread('../lenna.png', 0)
+    img = cv.imread('../lenna.png')
+    gray1 = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    result = SaltNoise(gray, 0.2)
+    cv.imshow("result", np.hstack([result, gray1]))
+    cv.waitKey(0)
+    cv.destroyAllWindows()

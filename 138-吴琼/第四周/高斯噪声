@@ -1,0 +1,25 @@
+import cv2
+import  numpy as np
+import sys
+def add_noise(image,mean=0,val=0.01):
+    size = image.shape
+    image = image/255
+    gauss = np.random.normal(mean,val**0.5,size)
+    noise = gauss+image
+    return gauss,noise
+
+if __name__=="__main__":
+    img = cv2.imread('lenna.png')
+    if img is None:
+        print('img error')
+        sys.exit()
+
+    gray_img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    gray_gauss,gray_noise = add_noise(gray_img)
+    color_guass,color_noise = add_noise(img)
+    cv2.imshow('gauss_noise',gray_noise)
+    cv2.imshow('gray_img',gray_img)
+    cv2.imshow('color_noise',color_noise)
+    cv2.imshow('color_img',img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
