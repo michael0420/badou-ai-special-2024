@@ -30,6 +30,7 @@ dst = cv2.addWeighted(src1, alpha, src2, beta, gamma[, dst[, dtype]])
 gamma是加到最后结果上的一个值。
 '''
 dst = cv2.addWeighted(absX,0.5,absY,0.5,0)
+cv2.imshow('src',img)
 cv2.imshow("absX",absX)
 cv2.imshow("absY",absY)
 cv2.imshow("dst",dst)
