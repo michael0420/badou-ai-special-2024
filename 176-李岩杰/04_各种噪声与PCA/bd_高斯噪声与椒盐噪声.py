@@ -1,0 +1,22 @@
+# 1.实现高斯噪声 2.实现椒盐噪声 3.实现PCA 4.拓展：证明中心化协方差矩阵公式
+from skimage import util
+import matplotlib.pyplot as plt
+img = plt.imread("beauty.jpg")
+print(img.shape)
+plt.subplot(221)
+plt.imshow(img)
+plt.title('Original Image')
+noise_gs_img = util.random_noise(img,mode='gaussian')
+plt.subplot(222)
+plt.imshow(noise_gs_img)
+plt.title('Gaussian Noise')
+noise_jy_img = util.random_noise(noise_gs_img,mode='s&p')
+plt.subplot(223)
+plt.imshow(noise_jy_img)
+plt.title('Salt&Pepper Noise')
+plt.show()
+# cv2.imshow("source", img)
+# cv2.imshow("gaussian_noise",no47ise_gs_img)
+# cv2.imshow("jy_noise",noise_jy_img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()

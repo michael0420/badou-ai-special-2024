@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+#coding:utf-8
+
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+'''
+直方图均衡化,单通道
+'''
+
+# 获取灰度图像
+img=cv2.imread('lenna02.jpg',1)
+gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+
+#灰度图像直方图均衡化
+dst=cv2.equalizeHist(gray)
+
+
+#直方图
+hist=cv2.calcHist([dst],[0],None,[256],[0,256])
+
+plt.figure()
+plt.hist(dst.ravel(),256)
+plt.show()
+
+cv2.imshow("Histstogram Equalization",np.hstack([gray,dst]))
+cv2.waitKey()
+
+
+'''
+直方图均衡化,彩色三通道
+'''
+#彩色直方图图像均衡化
+img=cv2.imread('lenna.png',1)
+cv2.imshow("src",img)
+
+#分别对每个通道进行均衡化
+(b,g,r)=cv2.split(img)
+bh=cv2.equalizeHist(b)
+gh=cv2.equalizeHist(g)
+rh=cv2.equalizeHist(r)
+#合并3个通道
+result=cv2.merge((bh,gh,rh))
+cv2.imshow("dst_rgb",result)
+
+cv2.waitKey()

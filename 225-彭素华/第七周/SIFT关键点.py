@@ -1,0 +1,17 @@
+import cv2
+import numpy as np
+
+img = cv2.imread("lenna.png")
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+
+sift = cv2.SIFT_create()
+Keypoints,descriptor = sift.detectAndCompute(gray,None)
+
+img = cv2.drawKeypoints(image=img,outImage=img,keypoints=Keypoints,flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS,color=(51,163,236))
+
+
+
+cv2.imshow('sift_keypoints',img)
+cv2.waitKey(0)
+cv2.imwrite(r'D:\PSH-Learning\NGP\HashNeRF-pytorch_changed\learn\SIFT关键点.png', img)
+cv2.destroyAllWindows()

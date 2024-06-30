@@ -1,0 +1,25 @@
+Customer,Genre,Age,Annual Income (k$),Spending Score (1-100)
+1,Male,19,15,39
+2,Male,21,15,81
+3,Female,20,16,6
+4,Female,31,16,77
+5,Female ,23,17,40
+6,Female ,22,17,76
+7,Female,35,18,6
+8,Female,23,18,94
+9,Male,64,19,3
+10,Female ,30,19,72
+11,MaleFe,67,19,14
+12,maleFe,35,19,99
+13,maleFe,58,20,15
+14,male,24,20,77
+15,Male,37,20,13
+16,Male,22,20,79
+17,Female ,35,21,35
+18,Male ,20,21,66
+19,Male,52,23,29
+20,Female ,35,23,98
+21,Male ,35,24,35
+22,Male,25,24,73
+23,Female,46,25,5
+24,Male,31,25,73

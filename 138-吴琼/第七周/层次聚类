@@ -1,0 +1,10 @@
+from scipy.cluster.hierarchy import dendrogram,linkage,fcluster
+from matplotlib import pyplot as plt
+
+X = [[1,2],[2,2],[4,4],[1,2],[8,3]]
+Z = linkage (X,'ward')
+f = fcluster(Z,4,'distance')
+fig = plt.figure(figsize = (10,10))
+dn = dendrogram(Z)
+print(Z)
+plt.show()

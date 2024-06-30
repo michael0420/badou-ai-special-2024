@@ -21,7 +21,7 @@ def function(img):
 
 
 # cv2.resize(img, (800,800,c),near/bin)  直接调用api
-img = cv2.imread("D:\cv_workspace\picture\lenna.png")  # 读取原图 512X512
+img = cv2.imread("D:\cv_workspace\picture\lenna.png")  # 读取原图 512X512  shape=(512,512,3)  dtype=unit8
 zoom = function(img)  # 定义function函数实现上采样
 print(zoom)
 print(zoom.shape)

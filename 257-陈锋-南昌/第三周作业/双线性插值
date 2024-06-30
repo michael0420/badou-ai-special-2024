@@ -1,0 +1,43 @@
+#!/usr/bin/python
+#coding:utf-8
+
+import numpy as np
+import cv2
+
+'''
+实现双线性插值
+'''
+
+def bilinear_interpolation(img,targ_dim):
+	src_h,src_w,channel=img.shape
+	targ_h,targ_w=targ_dim[1],targ_dim[0]
+	#如果目标尺寸与原图一致，直接返回原图
+	if src_h==targ_h and src_w==targ_w:
+		return img.copy()
+	else:
+		targ_img=np.zeros((targ_h,targ_w,3),dtype=np.uint8)
+		scale_x,scale_y=float(src_w)/targ_w,float(src_h)/targ_h
+		for i in range(channel):
+			for targ_y in range(targ_h):
+				for targ_x in range(targ_w):
+					#中心化  #对应PPT公式：【04】数字图像P24
+					src_x=(targ_x+0.5)*scale_x-0.5
+					src_y=(targ_y+0.5)*scale_y-0.5
+					#计算插值点
+					src_x1=int(np.floor(src_x))   #np.floor() 向下取整
+					src_x2=min(src_x1+1,src_w-1)  #控制边界，防止超出边界
+					src_y1=int(np.floor(src_y))
+					src_y2=min(src_y1+1,src_h-1)
+					
+					#代入公式计算
+					temp1=(src_x2-src_x)*img[src_y1,src_x1,i]+(src_x-src_x1)*img[src_y1,src_x2,i]
+					temp2=(src_x2-src_x)*img[src_y2,src_x1,i]+(src_x-src_x1)*img[src_y2,src_x2,i]
+					targ_img[targ_y,targ_x,i]=int((src_y2-src_y)*temp1+(src_y-src_y1)*temp2)
+	return targ_img
+	
+if __name__=='__main__':
+	img=cv2.imread('lenna02.jpg')
+	targ=bilinear_interpolation(img,(700,700))
+	cv2.imshow('bilinear interp',targ)
+	cv2.waitKey()
+	

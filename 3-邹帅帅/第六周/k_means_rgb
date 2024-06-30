@@ -1,0 +1,85 @@
+
+import cv2 
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 读图
+img = cv2.imread(r"E:\image\lenna.png")
+print(img.shape)
+
+# 转一维数组 虽然结果是二维的，但从数据处理的角度看，你可以把它当作一维数据的逻辑视图，因为每个元素（像素的BGR值）是线性排列的
+data = img.reshape((-1, 3))
+data = np.float32(data)
+
+# 停止条件
+criteria = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+
+# 初始中心选择 随机
+flags = cv2.KMEANS_RANDOM_CENTERS
+
+#K-Means聚类 聚集成2类
+compactness, labels2, centers2 = cv2.kmeans(data, 2, None, criteria, 10, flags)
+
+#K-Means聚类 聚集成4类
+compactness, labels4, centers4 = cv2.kmeans(data, 4, None, criteria, 10, flags)
+
+#K-Means聚类 聚集成2类
+compactness, labels8, centers8 = cv2.kmeans(data, 8, None, criteria, 10, flags)
+
+#K-Means聚类 聚集成2类
+compactness, labels16, centers16 = cv2.kmeans(data, 16, None, criteria, 10, flags)
+
+#K-Means聚类 聚集成2类
+compactness, labels64, centers64 = cv2.kmeans(data, 64, None, criteria, 10, flags)
+
+#图像转换回uint8二维类型
+'''
+当执行 centers2[labels2.flatten()] 时，这个操作实际上是基于labels2中每个元素的值（即每个像素的聚类标签），
+从centers2中选择对应的行（对于彩色图像，每一行是一个颜色向量，如(B, G, R)）。例如，如果labels2中的某位置的值是2，
+那么就从centers2的第2行（索引为2，因为索引是从0开始的）取出颜色值，作为该像素的新颜色。这个过程遍历所有像素，
+为每个像素找到其在聚类中的对应颜色，从而生成一个新的图像。
+这一行代码实现了从聚类标签到实际像素值映射的转换，是将K-means聚类结果应用于原始数据并生成聚类后图像的核心步骤。
+https://tongyi.aliyun.com/qianwen/share?shareId=da30849c-b0a4-4440-81a4-16d40d741138
+
+.flatten(): 这个方法用于将多维数组转换为一维数组。
+'''
+
+centers2 = np.uint8(centers2)
+res = centers2[labels2.flatten()]
+data2 = res.reshape((img.shape))
+
+centers4 = np.uint8(centers4)
+res = centers4[labels4.flatten()]
+data4 = res.reshape((img.shape))
+
+centers8 = np.uint8(centers8)
+res = centers8[labels8.flatten()]
+data8 = res.reshape((img.shape))
+
+centers16 = np.uint8(centers16)
+res = centers16[labels16.flatten()]
+data16 = res.reshape((img.shape))
+
+centers64 = np.uint8(centers64)
+res = centers64[labels64.flatten()]
+data64 = res.reshape((img.shape))
+
+# 图像转换为RGB显示
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+data2 = cv2.cvtColor(data2, cv2.COLOR_BGR2RGB)
+data4 = cv2.cvtColor(data4, cv2.COLOR_BGR2RGB)
+data8 = cv2.cvtColor(data8, cv2.COLOR_BGR2RGB)
+data16 = cv2.cvtColor(data16, cv2.COLOR_BGR2RGB)
+data64 = cv2.cvtColor(data64, cv2.COLOR_BGR2RGB)
+
+titles = ["原图", "聚类2", "聚类4", "聚类8", "聚类16", "聚类64"]
+imgs = [img, data2, data4, data8, data16, data64]
+
+for i in range(6):
+    plt.subplot(2, 3, i+1)
+    plt.title(titles[i])
+    plt.imshow(imgs[i])
+    plt.yticks([])
+    plt.yticks([])
+plt.show()
+    

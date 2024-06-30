@@ -1,0 +1,65 @@
+import  cv2
+import  numpy as np
+ #均值哈希算法
+def aHash(img):
+    img = cv2.resize(img,(8,8),interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    s = 0 #计算像素值之和
+    hash_str = ''  #生成哈希字符串
+    for i in range(8):
+        for j in range(8):
+             s = s+gray[i,j]
+    avg = s/64  #计算像素值均值
+
+    #判断灰度像素值是否大于像素均值，是即为1，否为0
+    for i in range(8):
+        for j in range(8):
+            if gray[i,j] > avg:
+                hash_str = hash_str +'1'
+            else:
+                hash_str = hash_str + '0'
+    return hash_str
+
+#差值哈希算法
+def bHash(img):
+     img = cv2.resize(img,(9,8),interpolation=cv2.INTER_CUBIC)
+     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+     hash_str = ''
+     for i in range(8):
+         for j in range(8):
+             if gray[i,j] > gray[i,j+1]:
+                 hash_str = hash_str +'1'
+             else:
+                 hash_str = hash_str + '0'
+     return  hash_str
+
+ #哈希值比较
+def cmpHash(hash1,hash2):
+     n = 0 #计算汉明距离
+     if len(hash1) != len(hash2):
+         return -1
+     for i in range(len(hash1)):
+         if hash1[i] != hash2[i]:
+             n +=1
+     return  n
+
+
+img1 = cv2.imread('lenna.png')
+img2 = cv2.imread('zoe.png')
+hash1 = aHash(img1)
+hash2 = aHash(img2)
+print(hash1)
+print(hash2)
+n = cmpHash(hash1,hash2)
+print('均值哈希算法相似度：',n)
+
+
+hash3 = bHash(img1)
+hash4 = bHash(img2)
+print(hash3)
+print(hash4)
+n = cmpHash(hash3,hash4)
+print('差值哈希算法相似度：',n)
+
+
+
