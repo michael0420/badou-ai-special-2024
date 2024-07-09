@@ -1,0 +1,31 @@
+import cv2
+import numpy as np
+img =cv2.imread("photo1.jpg")
+result = img.copy()
+
+#四个点的对应信息，用于后续方程组未知数的求解
+src = np.float32([[207, 151], [517, 285], [17, 601], [343, 731]])
+dst = np.float32([[0, 0], [337, 0], [0, 488], [337, 488]])
+
+#求解矩阵
+num=src.shape[0]  #点的数量
+A=np.zeros((2*num,2*num))
+B=np.zeros((2*num,1))         #A*warpmatrix=B  ，求解warpMatrix
+for i in range(0,num):
+    A[2*i,:]=[src[i,0],src[i,1],1,0,0,0,-src[i,0]*dst[i,0],-src[i,1]*dst[i,0]]
+    A[2*i+1,:]=[0,0,0,src[i,0],src[i,1],1,-src[i,0]*dst[i,1],-src[i,1]*dst[i,1]]
+    B[2*i]=dst[i,0]
+    B[2*i+1]=dst[i,1]
+warpMatrix=np.dot(np.linalg.inv(A),B)         #让a的逆矩阵乘以B，计算出需要求解的矩阵,np.linalg.inv(A)是计算出a的逆矩阵
+warpMatrix=np.insert(warpMatrix,warpMatrix.shape[0],1,axis=0)   #np.insert插入元素值,在行的第warmMatrix.shape[0]的位置插入一个1
+warpMatrix=warpMatrix.reshape((3,3))
+#print(warpMatrix)
+
+
+#简洁版
+m = cv2.getPerspectiveTransform(src, dst)          #生成透视变换矩阵
+print(m)
+result2 = cv2.warpPerspective(result, m, (337, 488))
+cv2.imshow("src", img)
+cv2.imshow("result", result2)
+cv2.waitKey(0)

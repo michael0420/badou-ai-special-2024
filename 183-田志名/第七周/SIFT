@@ -1,0 +1,29 @@
+import cv2
+import numpy as np
+img = cv2.imread("lenna.png")  #读灰度图像
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+#sift特征提取
+sift = cv2.xfeatures2d.SIFT_create()
+keypoints, descriptor = sift.detectAndCompute(gray, None)     #提取关键点和描述符
+
+#绘图
+result = cv2.drawKeypoints(image=img, outImage=img, keypoints=keypoints,
+                        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS,
+                        color=(51, 163, 236))
+'''
+cv2.drawKeypoints函数介绍：
+cv2.drawKeypoints(image, keypoints, outImage, flags，color)
+image: 输入图像
+keypoints: 要绘制的关键点列表
+outImage: 输出图像,可以是与输入图像相同的对象
+color: 可选参数,用于设置关键点的颜色。如果未指定,将使用随机颜色
+flags: 可选参数,用于控制关键点的绘制方式。可选值包括:
+cv2.DRAW_MATCHES_FLAGS_DEFAULT: 绘制关键点圆圈
+cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS: 绘制关键点圆圈并显示尺度和方向
+cv2.DRAW_MATCHES_FLAGS_DRAW_OVER_OUTIMAGE: 在输出图像上绘制,而不是创建新图像
+cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS: 不绘制单个关键点
+'''
+
+cv2.imshow('sift_keypoints', result)
+cv2.waitKey(0)

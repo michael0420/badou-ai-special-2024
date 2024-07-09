@@ -1,0 +1,52 @@
+from tensorflow.keras.datasets import mnist
+(train_images,train_labels),(test_images,test_lables) = mnist.load_data()
+print('train_images.shape =',train_images.shape)
+print('train_lables =',train_lables)
+print('test_images.shape =',test_images.shape)
+print('test_lables =',test_lables)
+
+digit = test_images[0]
+import matplotlib.pyplot as plt
+plt.imshow(digit,cmap= plt.cm.binary)
+plt.show()
+
+from tensorflow.keras import models
+from tensorflow.keras import layers
+
+network = models.Sequential()
+network.add(layers.Dense(512,activation='relu',input_shape=(28*28,)))
+network.add(layers.Dense(10,activation= 'softmax'))
+network.compile(optimizer='rmsprop',loss='categorical_crossentropy',metrics=['accuracy'])
+
+train_images = train_images.reshape((60000,28*28))
+train_images = train_images.astype('float32')/255
+test_images = test_images.reshape((60000,28*28))
+test_images = test_images.astype('float32')/255
+
+from tensorflow.keras.utils import to_categorical
+print('before change:',test_lables[0])
+train_labels = to_categorical(train_labels)
+test_lables = to_categorical(test_lables)
+print('after change:',test_lables[0])
+#训练函数fit
+network.fit(train_images,train_labels,epochs=5,batch_size=128)
+#evaluate测试函数
+test_loss,test_acc = network.evaluate(test_images,test_lables,verbose = 1)
+print(test_loss)
+print('test_acc:',test_acc)
+#predict推理函数
+(train_images,train_lables),(test_images,test_lables)= mnist.load_data()
+digit = test_images[1]
+plt.imshow(digit,cmap=plt.cm.binary)
+plt.show()
+test_images = test_images.reshape((10000,28*28))
+res = network.predict(test_images)
+
+for i in range(res[1].shape[0]):
+    if(res[1][i] ==1):
+        print('the number of the picture is:',i)
+        break
+
+
+
+

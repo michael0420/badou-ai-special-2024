@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from PIL import Image
 from skimage import util
-
+import os
 '''
 def random_noise(image, mode='gaussian', seed=None, clip=True, **kwargs):
 功能：为浮点型图片添加各种随机噪声
@@ -29,12 +29,20 @@ salt_vs_pepper：可选的，float型，椒盐噪声中椒盐比例，值越大�
 
 img = cv.imread("lenna.png")                          # 原图
 noise_gs_img=util.random_noise(img,mode='gaussian')   # 高斯噪声图  util.random_noise(img,mode='gaussian',mean=0, var=0.01)
-noise_gs_img1=util.random_noise(img,mode='poisson')   # 泊松噪声图
-noise_gs_img2=util.random_noise(img,mode='s&p')      # 椒盐噪声图
+noise_ps_img=util.random_noise(img,mode='poisson')   # 泊松噪声图
+noise_sp_img=util.random_noise(img,mode='s&p')      # 椒盐噪声图
 cv.imshow("img", img)
 cv.imshow("gauss",noise_gs_img)
-cv.imshow("poisson",noise_gs_img1)
-cv.imshow("s&p",noise_gs_img2)
+cv.imshow("poisson",noise_ps_img)
+cv.imshow("s&p",noise_sp_img)
 #cv.imwrite('lenna_noise.png',noise_gs_img)
 cv.waitKey(0)
 cv.destroyAllWindows()          # #销毁全部窗口
+
+# 保存高斯噪声后的照片
+noise_gs_img = noise_gs_img * 255
+cv.imwrite("noise_gs_img.png", noise_gs_img)
+# 检验保存结果
+img1 = cv.imread('noise_gs_img.png')
+cv.imshow('noise',img1)
+cv.waitKey(0)

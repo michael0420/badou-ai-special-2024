@@ -1,0 +1,34 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn import datasets
+from  sklearn.cluster import DBSCAN
+
+#读取数据集
+iris=datasets.load_iris()   #print(iris.items())#里面包含数据，target等信息，数据是4维的
+data=iris.data              #150*4
+
+'''
+plt.scatter(data[:, 0], data[:, 1], c="red", marker='o', label='see')  #此处的label即写标注，需要和legend函数配和使用
+plt.xlabel('sepal length')
+plt.ylabel('sepal width')
+plt.legend(loc=2)   #它可以为图形上的各个元素(如线条、散点等)添加对应的图例标签。loc是图例的位置,可以是字符串(如 'upper left')或数字(如 1, 2, 3, 4)。
+plt.show()
+'''
+
+#密度聚类
+dbscan = DBSCAN(eps=0.4, min_samples=9)    #两个参数，第一个参数是半径，第二个区域内的点的最少个数
+dbscan.fit(data)                           #放入数据
+label= dbscan.labels_                      #一维列表，存放种类，结果是-1的为噪声点
+
+x0 = data[label== 0]                       #label==0会得到一个列表，成员为ture和false
+x1 = data[label== 1]
+x2 = data[label== 2]
+
+#绘图
+plt.scatter(x0[:, 0], x0[:, 1], c="red", marker='o')
+plt.scatter(x1[:, 0], x1[:, 1], c="green", marker='*')
+plt.scatter(x2[:, 0], x2[:, 1], c="blue", marker='+')
+plt.xlabel('sepal length')
+plt.ylabel('sepal width')
+plt.legend(["a","b","c"],loc="upper right")     #label也可以在plt.scatter函数中写
+plt.show()

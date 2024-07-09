@@ -1,0 +1,31 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def Normalization1(x):
+    '''
+    归一化（0~1）
+    x = (x-xmin)/(xmax-xmin)
+    '''
+    return [(float((i)-min(x)))/float(max(x)-min(x)) for i in x]
+def Normalization2(x):
+    return [(float(i)-np.mean(x))/(max(x)-min(x)) for i in x]
+
+def z_score(x):
+    x_mean = np.mean(x)
+    x_std = sum([(i - x_mean)*(i-x_mean) for i in x])/len(x)
+    return [(i - x_mean)/x_std for i in x]
+
+l=[-10, 5, 5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 30]
+l1=[]
+
+n = Normalization1(l)
+n1 = Normalization2(l)
+z = z_score(l)
+
+print('归一化（-1 到 1）：',n)
+print('标准化z-score',z)
+print(n1)
+
+
+
+plt.plot(range(len(l)),l,label = '原始数据')

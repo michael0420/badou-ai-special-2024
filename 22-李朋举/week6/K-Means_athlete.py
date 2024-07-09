@@ -93,13 +93,20 @@ print(y)
 绘制散点图 
 参数：x横轴; y纵轴; c=y_pred聚类预测结果; marker类型:o表示圆点,*表示星型,x表示点;
 '''
-plt.scatter(x, y, c=y_pred, marker='x')
+# plt.scatter(x, y, c=y_pred, marker='x')
+scatter = plt.scatter(x, y, c=y_pred, marker='x')
+
 # 绘制标题
 plt.title("Kmeans-Basketball Data")
 # 绘制x轴和y轴坐标
 plt.xlabel("assists_per_minute")
 plt.ylabel("points_per_minute")
 # 设置右上角图例
-plt.legend(["A", "B", "C"])
+# plt.legend(["A", "B", "C"])
+'''
+将散点图的第一个图例元素添加到图例中，并为其指定标签为"A"、"B"和"C"。
+scatter.legend_elements()返回一个包含散点图所有图例元素的列表，索引从 0 开始, 因此，handles=scatter.legend_elements()[0]表示将散点图的第一个图例元素添加到图例中。
+'''
+plt.legend(handles=scatter.legend_elements()[0], labels=["A", "B", "C"])  # matplotlib3.1.2可用
 # 显示图形
 plt.show()
