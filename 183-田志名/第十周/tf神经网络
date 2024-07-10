@@ -1,0 +1,44 @@
+import tensorflow.compat.v1 as tf    #换成.1版本
+import numpy as np
+import matplotlib.pyplot as plt
+
+tf.disable_v2_behavior()    #版本不兼容，换成.1版本
+#1.构建数据集
+x_data=np.linspace(-0.5,0.5,200)[:,np.newaxis]       #用于创建等间隔的数值序列，np.linspace(0, 10, 5) 会生成一个包含5个元素的数组，（0|2.5|5|7.5|10）
+noise=np.random.normal(0,0.02,x_data.shape)
+y_data=np.square(x_data)+noise
+
+#2.构建网络
+x=tf.placeholder(tf.float32,[None,1])                #用于存放输入信息，y用于存放标签信息。tf.placeholder先空置
+y=tf.placeholder(tf.float32,[None,1])
+
+w1=tf.Variable(tf.random.normal((1,10)))             #隐藏层搭建，tf.Variable为变量，会更新
+print(w1)
+b1=tf.Variable(tf.zeros((1,10)))
+z1=tf.matmul(x,w1)+b1
+a1=tf.nn.tanh(z1)
+
+w2=tf.Variable(tf.random.normal((10,1)))             #输出成搭建
+b2=tf.Variable(tf.zeros(1,1))
+z2=tf.matmul(a1,w2)+b2
+a2=tf.nn.tanh(z2)
+
+loss=tf.reduce_mean(tf.square(y-a2))                 #tf.reduce_mean用于计算张量的平均值
+train_step=tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+
+#3.训练
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for i in range(2000):
+        sess.run(train_step,feed_dict={x:x_data,y:y_data})
+
+#4.预测
+    prediction_value = sess.run(a2, feed_dict={x: x_data})
+
+
+
+#5.画图
+plt.figure()                                   #画一张图时可写可不写
+plt.scatter(x_data,y_data)
+plt.plot(x_data,prediction_value,lw=2)         #lw是线条的宽度
+plt.show()

@@ -1,0 +1,30 @@
+import numpy as np
+import matplotlib.pyplot as plt
+l=[-10, 5, 5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 30]
+cs=[]   #记录每个元素出现的次数
+for i in l:
+    c=l.count(i)
+    cs.append(c)
+
+#归一化方式1
+def Normalization1(x):
+    return [(float(i)-min(x))/float(max(x)-min(x)) for i in x]  #x_=(x−x_min)/(x_max−x_min)
+
+#归一化方式2
+def Normalization2(x):
+    return [(float(i)-np.mean(x))/(max(x)-min(x)) for i in x]  #x_=(x−x_mean)/(x_max−x_min)
+
+#标准化
+def z_score(x):
+    #方差为1，均值为0
+    x_mean=np.mean(x)
+    s2=sum([(i-np.mean(x))*(i-np.mean(x)) for i in x])/len(x)
+    return [(i-x_mean)/s2 for i in x]
+
+n=Normalization2(l)
+z=z_score(l)
+plt.plot(l,cs,c="red",label="baseline")
+plt.plot(n,cs,c="green",label="Normalization2")
+plt.plot(z,cs,c="blue",label="blue")
+plt.legend()
+plt.show()

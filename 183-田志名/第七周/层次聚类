@@ -1,0 +1,35 @@
+from scipy.cluster.hierarchy import dendrogram, linkage,fcluster
+import matplotlib.pyplot as plt
+
+X = [[1,2],[3,2],[4,4],[1,2],[1,3]]
+Z = linkage(X, 'ward')   #linkage用于层次聚类分析,ward是最小方差聚类
+#print(Z)
+'''
+[[0.         3.         0.         2.        ]
+ [4.         5.         1.15470054 3.        ]
+ [1.         2.         2.23606798 2.        ]
+ [6.         7.         4.00832467 5.        ]]
+ 第一列和第二列代表这一次迭代中哪两个合并，第三列代表这两个组之间的距离
+ 第四个代表新的组中的成员个数
+ 纵轴是迭代的次数，该例中，4次迭代会将5个点构成一个整体
+'''
+f = fcluster(Z,3,'distance')
+#print(f)#t为5的时候，[1 1 1 1 1]，t为3的时候，[1 2 2 1 1]，根据上面z的第四列来
+'''
+scipy.cluster.hierarchy.fcluster(Z, t, criterion='inconsistent', depth=2, R=None, monocrit=None)
+第二个参数t是依据第三个参数的
+当 criterion='inconsistent' 时, t 表示不一致系数的阈值。不一致系数是用来度量两个簇之间的相似性的指标。如果两个簇之间的不一致系数小于 t，那么这两个簇将被合并。
+当 criterion='distance' 时, t 表示簇间距离的阈值。如果两个簇之间的距离小于 t，那么这两个簇将被合并。
+当 criterion='maxclust' 时, t 表示要生成的簇的最大数量。
+当 criterion='monocrit' 时, t 表示单标准的阈值。
+'''
+plt.figure(figsize=(5, 3))
+dendrogram(Z)    #绘制聚类树
+plt.show()
+'''
+scipy.cluster.hierarchy.linkage: 计算聚类树(dendrogram)。
+scipy.cluster.hierarchy.fcluster 它可以根据聚类树(dendrogram)将数据划分为指定数量的簇
+scipy.cluster.hierarchy.dendrogram: 绘制聚类树。
+scipy.cluster.hierarchy.distance: 计算样本之间的距离矩阵。
+scipy.cluster.hierarchy.cophenet: 计算cophenetic相关系数
+'''
