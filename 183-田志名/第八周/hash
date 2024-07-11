@@ -1,0 +1,183 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+import time
+import os.path as path
+#加强图片的亮度
+def light(img):
+    return np.uint8(np.clip((1.3 * img + 10), 0, 255))  #用于将数组中的元素限制在指定范围内,np.clip(a, a_min, a_max, out=None)
+
+#更改图像的大小
+def resize(img):
+    return cv2.resize(img, (0, 0), fx=1.25, fy=1)       #fx，fy水平垂直方向的缩放比例,(0, 0)：表示输出图像的大小，当它设置为(0, 0)时，表示输出图像的大小将根据fx和fy的缩放比例自动计算。
+
+# 修改图片的对比度
+def contrast(img):
+    a=1.2
+    g=0
+    h,w,c=img.shape
+    # 新建全零图片数组src，类型设置为原图片的通道类型(色素全为零，输出为全黑图片)
+    src=np.zeros((img.shape),img.dtype)               #可以用.dtype查看元素类型
+    return cv2.addWeighted(img, a, src, 1 - a, g)     #将两张图片融合，a是第一张图片的权重，1-a是第二张图片的
+
+#图像锐化，用拉普拉斯核函数
+def sharp(img):
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]], np.float32)
+    return cv2.filter2D(img,-1,kernel=kernel)  #第两个参数是通道数，-1和原图像一致
+
+#图像模糊,均值卷积
+def blur(img):
+    return cv2.blur(img, (7, 7))    #(5, 5)卷积核的大小
+
+#保存图片
+def save_img(img,name,outdir):
+    cv2.imwrite(path.join(outdir,name),img)
+
+#生成图片
+def img_generation(input_path,out_dir):
+    img=cv2.imread(input_path)
+    # 修改图片的亮度
+    img_light = light(img)
+    # 修改图片的大小
+    img_resize = resize(img)
+    # 修改图片的对比度
+    img_contrast = contrast(img)
+    # 锐化
+    img_sharp = sharp(img)
+    # 模糊
+    img_blur = blur(img)
+    #保存图片
+    save_img(img_light, "light.jpg" , out_dir)
+    save_img(img_resize, "resize.jpg" , out_dir)
+    save_img(img_contrast, "contrast.jpg", out_dir)
+    save_img(img_sharp, "sharp.jpg" , out_dir)
+    save_img(img_blur, "blur.jpg", out_dir)
+
+#均值哈希
+def aHash(img,w=8,h=8):
+    #1.缩放
+    img = cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC)    #后面是采样的方法，cv2.INTER_CUBIC是双三次差值方法
+    #2.转化为灰度图
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #3.计算所有灰度图的平均值
+    sum=0
+    for i in range(h):
+        for j in range(w):
+            sum=sum+gray[i,j]
+    mean=sum/(h*w)
+    #4.比较，像素值大于平均值为1，小于为0
+    mid=gray.copy()
+    gray[mid>=mean]=1
+    gray[mid<mean]=0
+    #5.生成hash，将生成的0和1链接一起生成图片的指纹
+    result=""
+    for i in range(h):
+        for j in range(w):
+            result=result+str(gray[i,j])
+    return result
+
+#感知hash
+def pHash(img,w=32,h=32):
+    #1.缩放，32*32是一个较好的大小，方便DCT计算
+    img = cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC)
+    #2.转化为灰度图
+    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    #3.计算DCT（DCT把图片分离成分率的集合）
+    h, w = img.shape[:2]
+    vis0 = np.zeros((h, w), np.float32)
+    vis0[:h, :w] = gray
+    vis1 = cv2.dct(cv2.dct(vis0))     ## 二维Dct变换
+    #4.缩小DCT，保留左上角的8*8
+    vis1.resize(8, 8)
+    #5.计算平均值
+    img_list = vis1.flatten()
+    mean=img_list.mean()
+    #6.进一步减小DCT，大于平均值的记录为1，反之为0
+    avg_list = ['0' if i > mean else '1' for i in img_list]
+    #7，得到信息指纹
+    result=""
+    for i in range(len(avg_list)):
+        result =result+avg_list[i]
+    return result
+
+#差值hash
+def dHash(img,w=9,h=8):
+    # 1.缩放
+    img = cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC)    #（w,h）图像的长和宽，和数组不同，数组第一个是行，第二个是列
+    # 2.转化为灰度图
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # 3.比较，像素值大于后一个像素为1，小于后一个为0
+    # 4.生成hash，将生成的0和1链接一起生成图片的指纹
+    result = ""
+    for i in range(h):
+        for j in range(w-1):
+            if(gray[i,j]>=gray[i,j+1]):
+                result=result+"1"
+            else:
+                result=result+"0"
+    return result
+
+#对hash处理的两个图片进行对比
+def cmp_hash(img1,img2):
+    num=0
+    if(len(img1)!=len(img2)):
+        return -1
+    for i in range(len(img1)):
+        if(img1[i]!=img2[i]):
+            num+=1
+    return 1-num/len(img1)
+
+#运行均值hash，并记录时间,相似度
+def test_aHash(img1,img2):
+    time1 = time.time()
+    hash1 = aHash(img1)
+    hash2 = aHash(img2)
+    exact=cmp_hash(hash1,hash2)
+    return  exact,time.time()-time1
+
+#运行感知hash，并记录时间
+def test_pHash(img1,img2):
+    time1 = time.time()
+    hash1 = pHash(img1)
+    hash2 = pHash(img2)
+    exact = cmp_hash(hash1, hash2)
+    return exact, time.time() - time1
+
+#运行差值hash，并记录时间
+def test_dHash(img1,img2):
+    time1 = time.time()
+    hash1 = dHash(img1)
+    hash2 = dHash(img2)
+    exact = cmp_hash(hash1, hash2)
+    return exact, time.time() - time1
+
+if  __name__ =="__main__":
+    #对原有的图片进行修改，生成新的图片
+    img_generation("lenna.png","img")
+    base=cv2.imread("lenna.png")
+    #读取生成的所有图片
+    light=cv2.imread("img/light.jpg")
+    resize=cv2.imread("img/resize.jpg")
+    contrast = cv2.imread("img/contrast.jpg")
+    sharp = cv2.imread("img/sharp.jpg")
+    blur = cv2.imread("img/blur.jpg")
+    #测试相似度（不是准确率，不是越高越好），以及耗费的时间
+    start_time = time.time()
+    for i in range(10000):
+        exact1, timeOne = test_aHash(base, light) #均值hash
+    time1 = time.time() - start_time
+
+    start_time = time.time()
+    for i in range(10000):
+        exact2, timeOne = test_dHash(base, light) #差值hash
+    time2 = time.time() - start_time
+
+    start_time = time.time()
+    for i in range(10000):
+        exact3, timeOne = test_pHash(base, light) #感知hash
+    time3 = time.time() - start_time
+    print("均值hash相似度为%s,耗费的时间为%.8fs" % (exact1, time1))
+    print(f"差值hash相似度为{exact2},耗费的时间为{time2:.8f}s")   #在 Python 3.6 及更高版本中，推荐使用 f-string 来进行字符串格式化，它提供了更直观和简洁的方法
+    print(f"感知hash相似度为{exact3},耗费的时间为{time3:.8f}s")
+
+

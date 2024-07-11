@@ -1,0 +1,1 @@
+老师，如需运行，请将resnet50_weights_tf_dim_ordering_tf_kernels.h5模型文件复制进Resnet文件夹中后运行resnet50_homework.py

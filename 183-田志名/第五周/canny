@@ -1,0 +1,232 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+import copy
+
+#高斯滤波
+def guass(img,filter_size):
+    sigma=0.5
+    pad_size=filter_size//2
+    pad_img=np.pad(img,((pad_size,pad_size),(pad_size,pad_size)),mode="constant")   #np.pad()中pad.width格式((),(),()...)
+    filter=np.zeros([filter_size,filter_size])
+    #卷积核生成
+    part1=1/(2*np.pi*sigma**2)
+    part2=-1/(2*sigma**2)
+    temp=[i-pad_size for i in range(filter_size)]                            #序列，此处为[-2,-1,0,1,2]
+    for i in range(filter_size):
+        for j in range(filter_size):
+            filter[i,j]=part1*np.exp(part2*(temp[i]**2+temp[j]**2))
+    filter=filter/filter.sum()
+    #卷积操作
+    guass_img=np.zeros(img.shape)
+    h,w=img.shape
+    for i in range(h):
+        for j in range(w):
+            guass_img[i,j]=(pad_img[i:i+filter_size,j:j+filter_size]*filter).sum()
+    return guass_img
+
+def sobel(img):
+    #设置sobel算子
+    sobelX=np.array([[-1,0,1],[-2,0,2],[-1,0,1]])
+    sobelY=np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+    #卷积操作
+    pad_img=np.pad(img,((1,1),(1,1)),mode="constant")
+    angel=np.zeros(img.shape)
+    valueX=np.zeros(img.shape)
+    valueY=np.zeros(img.shape)
+    tidu=np.zeros(img.shape)
+    h,w=img.shape
+    for i in range(h):
+        for j in range(w):
+            valueX[i,j]=(pad_img[i:i+3,j:j+3]*sobelX).sum()
+            valueY[i,j]=(pad_img[i:i+3,j:j+3]*sobelY).sum()
+            tidu[i,j]=np.sqrt(valueX[i,j]**2+valueY[i,j]**2)      #计算梯度，也是sobel的结果
+    valueX[valueX==0]=0.0000001            #不能除以0
+    valueY[valueY==0]=0.0000001
+    return [valueX,valueY,tidu]
+
+#非极大值抑制
+def yizhi(sobelX,sobelY,sobel_img):
+    '''
+    yizhi_img = np.zeros(sobel_img.shape)
+    angle=sobelY/sobelX
+    h,w=sobel_img.shape
+    for i in range(1, h - 1):
+        for j in range(1, w - 1):
+            flag = True  # 在8邻域内是否要抹去做个标记
+            temp = sobel_img[i - 1:i + 2, j - 1:j + 2]  # 梯度幅值的8邻域矩阵
+            if angle[i, j] <= -1:  # 使用线性插值法判断抑制与否
+                num_1 = (temp[0, 1] - temp[0, 0]) / angle[i, j] + temp[0, 1]
+                num_2 = (temp[2, 1] - temp[2, 2]) / angle[i, j] + temp[2, 1]
+                if not (sobel_img[i, j] > num_1 and sobel_img[i, j] > num_2):
+                    flag = False
+            elif angle[i, j] >= 1:
+                num_1 = (temp[0, 2] - temp[0, 1]) / angle[i, j] + temp[0, 1]
+                num_2 = (temp[2, 0] - temp[2, 1]) / angle[i, j] + temp[2, 1]
+                if not (sobel_img[i, j] > num_1 and sobel_img[i, j] > num_2):
+                    flag = False
+            elif angle[i, j] > 0:
+                num_1 = (temp[0, 2] - temp[1, 2]) * angle[i, j] + temp[1, 2]
+                num_2 = (temp[2, 0] - temp[1, 0]) * angle[i, j] + temp[1, 0]
+                if not (sobel_img[i, j] > num_1 and sobel_img[i, j] > num_2):
+                    flag = False
+            elif angle[i, j] < 0:
+                num_1 = (temp[1, 0] - temp[0, 0]) * angle[i, j] + temp[1, 0]
+                num_2 = (temp[1, 2] - temp[2, 2]) * angle[i, j] + temp[1, 2]
+                if not (sobel_img[i, j] > num_1 and sobel_img[i, j] > num_2):
+                    flag = False
+            if flag:
+                yizhi_img[i, j] = sobel_img[i, j]
+    '''
+    #和上面的内容等价
+    h,w=sobel_img.shape
+    yizhi_img=np.zeros(sobel_img.shape)
+    for i in range(1,511):                 #最外面一圈不处理，需要中心点和邻近的8个点
+        for j in range(1,511):
+            g1=g2=g3=g4=0
+            if(abs(sobelY[i,j])>abs(sobelX[i,j])):
+                w=sobelX[i,j]/sobelY[i,j]
+                g1=sobel_img[i-1,j]
+                g2=sobel_img[i+1,j]
+                if(sobelX[i,j]/sobelY[i,j]>0):
+                    g3=sobel_img[i-1,j+1]
+                    g4=sobel_img[i+1,j-1]
+                else:
+                    g3=sobel_img[i-1,j-1]
+                    g4=sobel_img[i+1,j+1]
+            else:
+                w=sobelY[i,j]/sobelX[i,j]
+                g1=sobel_img[i,j-1]
+                g2=sobel_img[i,j+1]
+                if(sobelX[i,j]/sobelY[i,j]>0):
+                    g3=sobel_img[i-1,j+1]
+                    g4=sobel_img[i+1,j-1]
+                else:
+                    g3=sobel_img[i-1,j-1]
+                    g4=sobel_img[i+1,j+1]
+            num1=w*g1+(1-w)*g3                          #计算num1和num2
+            num2=w*g2+(1-w)*g4
+            if(sobel_img[i,j]>num1 and sobel_img[i,j]>num2):
+                yizhi_img[i,j]=sobel_img[i,j]
+
+
+    return yizhi_img
+
+
+#双阈值检测
+def doubleThreshold(yizhi_img,lower_boundary,high_boundary):
+    img_yizhi=copy.deepcopy(yizhi_img)
+    h,w=img_yizhi.shape
+    zhan=[]
+    for i in range(1,h-1):
+        for j in range(1,w-1):
+            if(img_yizhi[i,j]>=high_boundary):        #高于高阈值，标记为强边缘像素
+                img_yizhi[i,j]=255
+                zhan.append([i,j])
+            elif(img_yizhi[i,j]<=lower_boundary):     #低于低阈值，标记为弱边缘像素
+                img_yizhi[i,j]=0
+    #栈的方式比直接和周围8个点比较的方法更加严谨
+    while not len(zhan)==0:
+        temp_1, temp_2 = zhan.pop()  # 出栈
+        a = img_yizhi[temp_1 - 1:temp_1 + 2, temp_2 - 1:temp_2 + 2]
+        if (a[0, 0] < high_boundary) and (a[0, 0] > lower_boundary):
+            img_yizhi[temp_1 - 1, temp_2 - 1] = 255
+            zhan.append([temp_1 - 1, temp_2 - 1])
+        if (a[0, 1] < high_boundary) and (a[0, 1] > lower_boundary):
+            img_yizhi[temp_1 - 1, temp_2] = 255
+            zhan.append([temp_1 - 1, temp_2])
+        if (a[0, 2] < high_boundary) and (a[0, 2] > lower_boundary):
+            img_yizhi[temp_1 - 1, temp_2 + 1] = 255
+            zhan.append([temp_1 - 1, temp_2 + 1])
+        if (a[1, 0] < high_boundary) and (a[1, 0] > lower_boundary):
+            img_yizhi[temp_1, temp_2 - 1] = 255
+            zhan.append([temp_1, temp_2 - 1])
+        if (a[1, 2] < high_boundary) and (a[1, 2] > lower_boundary):
+            img_yizhi[temp_1, temp_2 + 1] = 255
+            zhan.append([temp_1, temp_2 + 1])
+        if (a[2, 0] < high_boundary) and (a[2, 0] > lower_boundary):
+            img_yizhi[temp_1 + 1, temp_2 - 1] = 255
+            zhan.append([temp_1 + 1, temp_2 - 1])
+        if (a[2, 1] < high_boundary) and (a[2, 1] > lower_boundary):
+            img_yizhi[temp_1 + 1, temp_2] = 255
+            zhan.append([temp_1 + 1, temp_2])
+        if (a[2, 2] < high_boundary) and (a[2, 2] > lower_boundary):
+            img_yizhi[temp_1 + 1, temp_2 + 1] = 255
+            zhan.append([temp_1 + 1, temp_2 + 1])
+
+    for i in range(img_yizhi.shape[0]):
+        for j in range(img_yizhi.shape[1]):
+            if img_yizhi[i, j] != 0 and img_yizhi[i, j] != 255:
+                img_yizhi[i, j] = 0
+
+    return img_yizhi
+
+
+def CannyThreshold(lowThreshold):
+    # detected_edges = cv2.GaussianBlur(gray,(3,3),0) #高斯滤波
+    detected_edges = cv2.Canny(gray,
+                               lowThreshold,
+                               lowThreshold * 3)  # 边缘检测
+
+    # 用原始颜色添加到检测的边缘上。
+    # 按位“与”操作。对于每个像素,将两幅输入图像相应位置的像素值分别进行按位“与”运算,输出的结果图像的对应像素值即为这两幅输入图像对应像素值的按位与结果。
+    # src1和src2表示要进行按位“与”操作的两幅输入图像；
+    # mask 是可选参数，如果指定了掩膜，则只对掩膜对应位置的像素进行按位“与”操作。函数的返回值表示按位“与”运算的结果。
+    dst = cv2.bitwise_and(img, img, mask=detected_edges)
+    cv2.imshow('canny result', dst)
+
+
+if __name__ =='__main__':
+    img=cv2.imread("lenna.png")
+    #步骤一：灰度化
+    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    #步骤二：高斯滤波
+    guass_img=guass(gray,5)
+    #步骤三：检测全图的水平，垂直边缘，用sobel
+    sobelX,sobelY,sobel_img=sobel(guass_img)
+    #步骤四：对梯度进行非极大值抑制
+    yizhi_img=yizhi(sobelX,sobelY,sobel_img)
+    #步骤五：双阈值算法检测和连接边缘
+    result_img=doubleThreshold(yizhi_img,22,66)
+
+    #画图
+    plt.figure(figsize=(15,8))
+    plt.subplot(231)
+    plt.imshow(gray,cmap="gray")
+    plt.subplot(232)
+    plt.imshow(guass_img.astype(np.uint8),cmap="gray")
+    plt.subplot(233)
+    plt.imshow(sobel_img.astype(np.uint8),cmap="gray")
+    plt.subplot(234)
+    plt.imshow(yizhi_img.astype(np.uint8),cmap="gray")
+    plt.subplot(235)
+    plt.imshow(result_img.astype(np.uint8),cmap="gray")
+    plt.show()
+
+    #简洁版
+    img = cv2.imread("lenna.png", 1)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    cv2.imshow("canny", cv2.Canny(gray, 200, 300))    #cv2.canny()第一个参数传灰度图，第二个是低阈值，第三个是高阈值
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+    #跟踪
+    img = cv2.imread("lenna.png", 1)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    lowThreshold = 0
+    max_lowThreshold = 100
+    cv2.namedWindow('canny result')
+    # 设置调节杠,
+    '''
+    下面是第二个函数，cv2.createTrackbar()
+    共有5个参数，其实这五个参数看变量名就大概能知道是什么意思了
+    第一个参数，是这个trackbar对象的名字
+    第二个参数，是这个trackbar对象所在面板的名字
+    第三个参数，是这个trackbar的默认值,也是调节的对象
+    第四个参数，是这个trackbar上调节的范围(0~count)
+    第五个参数，是调节trackbar时调用的回调函数名
+    '''
+    cv2.createTrackbar('Min threshold', 'canny result', lowThreshold, max_lowThreshold, CannyThreshold)
+    CannyThreshold(0)  # initialization
+    if cv2.waitKey(0) == 27:  # wait for ESC key to exit cv2
+        cv2.destroyAllWindows()

@@ -1,0 +1,86 @@
+import numpy as np
+import scipy.special
+
+class NetWork:
+    def __init__(self,inodes,hnodes,onodes,lr):
+        self.inodes=inodes        #784
+        self.hnodes=hnodes        #200
+        self.onodes=onodes        #10
+        self.lr=lr
+        self.w1=np.random.normal(0.0,pow(self.hnodes,-0.5),(self.hnodes,self.inodes))         #200*784
+        self.w2=np.random.normal(0.0,pow(self.onodes,-0.5),(self.onodes,self.hnodes))         #10*200
+        self.activate = lambda x: scipy.special.expit(x)         #scipy.special.expit是sigmoid函数
+
+
+    def fit(self,data,label):
+        #前向过程：
+        data=data[:,np.newaxis]                       #加一个维度  768*1
+        label=np.array(label,ndmin=2)                 #1*10
+        h_inputs=np.dot(self.w1,data)                 #200*1
+        act1=self.activate(h_inputs)                  #200*1
+        o_inputs=np.dot(self.w2,act1)                 #10*1
+        result=self.activate(o_inputs)                #10*1
+        #loss:
+        o_error=label.T-result                        #10*1
+        h_error=np.dot(self.w2.T,o_error*result*(1-result))             #200*1
+        #反向：
+        self.w2+=self.lr*np.dot(o_error*result*(1-result),act1.T)       #10*200
+        self.w1+=self.lr*np.dot(h_error*act1*(1-act1),data.T)             #200*784
+
+
+    def evaluate(self,data,label):
+        data = data[:, np.newaxis]
+        h_inputs = np.dot(self.w1, data)  # 200*1
+        act1 = self.activate(h_inputs)    # 200*1
+        o_inputs = np.dot(self.w2, act1)  # 10*1
+        result = self.activate(o_inputs)  # 10*1
+        return result
+
+def dataLoader(path,flag):
+    '''
+    f=open("dataset/mnist_test.csv",'r')
+    data=f.readlines()
+    f.close()
+    '''
+    with open(path,'r') as f:                       #省去f.colse()一步
+        data=f.readlines()                          #字符串列表
+    data=[line.split(",") for line in data]
+    data=np.asfarray(data)
+    input=(data[:,1:])/255.0                        #输入数据归一化
+    #两个数据集的标签处理方式不同
+    if flag:
+        label=np.zeros((data.shape[0],10))+0.01     #标签转成独热编码
+        for i,index in enumerate(data[:,0]):
+            label[i,int(index)]=0.99
+    else:
+        label=data[:,0]
+    return input,label
+
+
+
+if __name__=='__main__':
+    #1.读取数据
+    train_input,train_label=dataLoader("dataset/mnist_train.csv",1)
+    test_input,test_label=dataLoader("dataset/mnist_test.csv",0)
+    #2.初始化模型
+    model=NetWork(784,200,10,0.1)      #模型三层的神经元数量以及学习率
+    #3.训练模型
+    epoch=5
+    for i in range(epoch):
+        for j in range(train_input.shape[0]):
+            model.fit(train_input[j],train_label[j])
+        print(f"已完成{i+1}/{epoch}")
+    #4.测试模型
+    num=[]
+    for i in range(test_input.shape[0]):
+        result=model.evaluate(test_input[i],test_label[i])
+        index=np.argmax(result)       #找到最大值的下标
+        if (int)(test_label[i])==(int)(index):
+            num.append(1)
+        else:
+            num.append(0)
+    print(num)
+    print(np.asarray(num).sum()/10)     #主要区别在于 np.array（默认情况下）将会copy该对象，而 np.asarray除非必要，否则不会copy该对象。
+
+
+

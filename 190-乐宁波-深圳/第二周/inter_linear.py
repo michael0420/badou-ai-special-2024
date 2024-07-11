@@ -12,8 +12,11 @@ new_img = np.zeros([new_h, new_w, c], dtype=original_img.dtype)
 
 for y in range(new_h):
     for x in range(new_w):
-        nx = x / scale_factor
-        ny = y / scale_factor
+        nx = (x + 0.5) / scale_factor - 0.5  # 中心对齐
+        ny = (y + 0.5) / scale_factor - 0.5
+
+        # nx = x / scale_factor  # opencv用的是这个方式
+        # ny = y / scale_factor
 
         u = nx % 1
         v = ny % 1
@@ -32,4 +35,7 @@ for y in range(new_h):
 cv2.imshow('inter linear img1', new_img)
 resized_image = cv2.resize(original_img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)  # 对比opencv的双线性插值结果
 cv2.imshow('inter linear img2', resized_image)
+print(new_img)
+print('--------------------------------------')
+print(resized_image)
 cv2.waitKey(0)

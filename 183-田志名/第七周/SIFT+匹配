@@ -1,0 +1,55 @@
+import cv2
+import numpy as np
+
+def drawMatchesKnn_cv2(img1_gray, kp1, img2_gray, kp2, goodMatch):
+    h1, w1 = img1_gray.shape[:2]
+    h2, w2 = img2_gray.shape[:2]
+
+    #将两个图像拼接到一起，存放在vis数组中
+    vis = np.zeros((max(h1, h2), w1 + w2, 3), np.uint8)     #(462*475*3),(392*470*3),vis为(462*925*3)
+    vis[:h1, :w1] = img1_gray                               #(0:462,0:475)放第一张图
+    vis[:h2, w1:w1 + w2] = img2_gray                        #(0:392,475:925)放第二张图
+
+    p1 = [kpp.queryIdx for kpp in goodMatch]                #查询集中匹配的特征点索引（第一张图片）
+    p2 = [kpp.trainIdx for kpp in goodMatch]                #训练集中匹配的特征点索引（第二张图片）
+
+    post1 = np.int32([kp1[pp].pt for pp in p1])             #获取特征点的位置信息
+    post2 = np.int32([kp2[pp].pt for pp in p2]) + (w1, 0)
+
+    #将这两个点连线
+    for (x1, y1), (x2, y2) in zip(post1, post2):
+        cv2.line(vis, (x1, y1), (x2, y2), (0, 0, 255))
+
+    cv2.namedWindow("match", cv2.WINDOW_NORMAL)
+    cv2.imshow("match", vis)
+
+
+#读取图片
+img1_gray = cv2.imread("iphone1.png")
+img2_gray = cv2.imread("iphone2.png")
+
+#sifm特征提取
+sift = cv2.xfeatures2d.SIFT_create()
+kp1, des1 = sift.detectAndCompute(img1_gray, None)
+kp2, des2 = sift.detectAndCompute(img2_gray, None)
+
+#特征点匹配，用的是描述符，而不是kp（关键点）
+bf = cv2.BFMatcher(cv2.NORM_L2)             #是 OpenCV 中用于特征匹配的一种方法。它是 Brute-Force Matcher 的一种实现,使用 L2 范数作为距离度量。
+matches = bf.knnMatch(des1, des2, k = 2)    #opencv中knnMatch是一种蛮力匹配。将待匹配图片的特征与目标图片中的全部特征全量遍历，找出相似度最高的前k个。
+
+'''
+matches.distance: 匹配的距离
+matches.trainIdx: 训练集中匹配的特征点索引
+matches.queryIdx: 查询集中匹配的特征点索引
+matches.imgIdx: 训练集中匹配特征点所在图像的索引
+'''
+
+#对选中的点进行筛选
+goodMatch = []
+for m,n in matches:                         #m<n
+    if m.distance < 0.50*n.distance:        #不设置阈值，如果第一匹配点的距离比第二匹配点的一半还小，则认为该点匹配成功，保留第一匹配点，否则，都不要。
+        goodMatch.append(m)
+
+#绘图
+drawMatchesKnn_cv2(img1_gray,kp1,img2_gray,kp2,goodMatch[:20])#选取了20个匹配成功的点
+cv2.waitKey(0)

@@ -1,0 +1,38 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from keras import datasets
+from keras.utils import to_categorical    #将数字转成对应的one-hot向量
+from keras import models
+from keras import layers
+import numpy as np
+
+#第一步：读取数据集
+train_data,test_data=datasets.mnist.load_data()   #手写数字的数据集，训练集为60000*28*28，测试集为10000*28*28。labels是标签，代表是数字多少
+train_image=train_data[0]
+train_label=train_data[1]
+test_image=test_data[0]
+test_label=test_data[1]
+#plt.imshow(train_image[0],cmap='gray')
+#plt.show()
+
+#第二步：对数据集进行处理，标签变成one-hot向量
+train_image=train_image.reshape((train_image.shape[0],train_image.shape[1]*train_image.shape[2]))   #60000*784,此处还不是张量
+test_image=test_image.reshape((test_image.shape[0],test_image.shape[1]*test_image.shape[2]))        #10000*784
+train_image = train_image.astype('float32') / 255     #之前是uint8，改变数据类型，同时将值归到0到1之间
+test_image = test_image.astype('float32') / 255
+train_label=to_categorical(train_label)
+test_label=to_categorical(test_label)
+
+#第三步，构建模型
+nn=models.Sequential()
+nn.add(layers.Dense(512,activation='relu',input_shape=(28*28,))) #layers.Dense全连接网络,影藏层512个神经元，则权重向量为784*512
+nn.add(layers.Dense(10,activation='softmax'))                    #softmax用于分类任务
+nn.compile(optimizer='rmsprop',loss='categorical_crossentropy',metrics=['accuracy']) #选择编译步骤的三个参数,本例只关心精度，即正确分类的图像所占的比例。
+
+#第四步：训练模型
+nn.fit(train_image,train_label,batch_size=64,epochs=1)
+
+#第五步：预测模型
+loss,acc=nn.evaluate(test_image,test_label)
+print("loss为%f"%loss)
+print("acc为%f"%acc)

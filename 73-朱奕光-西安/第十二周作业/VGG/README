@@ -1,0 +1,1 @@
+老师，如需运行，请将带有vgg_16.ckpt模型文件的model文件夹复制在VGG文件夹内后运行VGG_run_homework.py

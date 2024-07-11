@@ -1,0 +1,109 @@
+import numpy as np
+import scipy.linalg as sl
+import matplotlib.pyplot as plt
+
+#最小二乘法
+class LinearLeastSquareModel:
+    def __init__(self,data):
+        self.data=data         #(500*2)前面是x，后面是y
+    def fit(self,sample):
+        A = sample[:, 0]    #x
+        B = sample[:, 1]    #y
+        A = np.concatenate((A[:,np.newaxis],np.ones((A.shape[0], 1))), axis=1)   #有了这一步，最后的x中就有k,b了,np.linalg.lstsq()不存在这个问题
+        x, resids, rank, s = sl.lstsq(A, B)  # 用于求解最小二乘问题,(x, residuals, rank, s)，要求A是二维的，每一行代表一个样本，每一列代表一个特征。
+        # 其中x是最小二乘解(就是系数k)，residuals是残差平方和，rank是回归矩阵X的秩。秩是一个矩阵的重要性质，它表示矩阵中线性无关的列的最大个数。s是系数矩阵的奇异值。
+        return x  # 返回模型
+    def get_error(self,model,sample):
+        A = sample[:, 0]
+        B = sample[:, 1][:,np.newaxis]
+        B_fit = np.dot(A, model[0])+model[1]  # 计算的y值,B_fit = model.k*A + model.b
+        B_fit=B_fit[:,np.newaxis]
+        err_per_point = np.sum((B - B_fit) ** 2, axis=1)
+        return err_per_point
+
+
+#进行ransac
+def ransac(data,model,data_min_num,iter_num,t,d):#数据集，模型，最少数据样本，迭代次数，阈值(作为判断点满足模型的条件),拟合较好时,需要的样本点最少的个数,当做阈值看待
+    iterations = 0
+    besterr=np.inf
+    bestfit = None   #最好的模型
+    bestindex=None   #最好模型对应的符合阈值的点
+    while(iterations<iter_num):
+
+        #随机取data_min_num个样本,剩下的作为测试样本
+        index=np.arange(data.shape[0])
+        np.random.shuffle(index)
+        sample_index=index[:data_min_num]
+        test_index=index[data_min_num:]
+        test_data=data[test_index]
+        samples=data[sample_index]
+
+        #用样本算出来对应的模型参数，然后将所有点带入计算，记录符合情况（误差在阈值之内）的点的个数
+        maybemodel=model.fit(samples)
+        error=model.get_error(maybemodel,test_data)
+        in_index=test_index[error<t]                     #找到所有小于阈值的点
+        result_data=data[in_index]
+
+        #如果点的数量大于阈值，则记录
+        if(len(result_data)>d):
+            betterdata = np.concatenate((samples, result_data))  # 样本连接
+            bettermodel=model.fit(betterdata)
+            bettererr=np.mean(model.get_error(bettermodel,betterdata))
+            if(bettererr<besterr):
+                besterr=bettererr
+                bestfit=bettermodel
+                bestindex=np.concatenate((sample_index,in_index))
+        iterations+=1
+    return bestfit,bestindex
+
+
+#构造数据集
+def dataGeneration(exactNum,nosiyNum):
+    #exactNum个准确数据
+    exactX=20*np.random.random((exactNum,1))
+    k=60*np.random.normal(size=(1,1))              #np.random.normal(loc, scale, size)，其中 loc 是均值，scale 是标准差，size 是生成的数组的形状。
+    exactY=np.dot(exactX,k)                        #得到对应的y
+
+    #给这500个数据添加高斯噪声，此时最小二乘法依然可以很好处理
+    nosiyX=exactX+np.random.normal(size=exactX.shape)
+    nosiyY=exactY+np.random.normal(size=exactY.shape)
+
+    #添加离群点,将原先exactNum个数据中的nosiyNum变成离群点
+    idx=np.arange(exactNum)
+    np.random.shuffle(idx)                     #将下标打乱
+    out_index=idx[:nosiyNum]
+    nosiyX[out_index] = 20*np.random.random((nosiyNum,1))        #对选中的点（离群点）进行修改
+    nosiyY[out_index]=60*np.random.normal(size=(nosiyNum,1))
+
+    #合并x，y，返回
+    data=np.hstack((nosiyX,nosiyY))
+    return data,nosiyX,nosiyY
+
+#绘图
+def plot(data,bestindex,method1fit,bestfit,noisyX,noisyY):
+    plt.figure(figsize=(8,6))
+    #绘制散点图
+    plt.scatter(noisyX,noisyY,c="red",label="data")
+    plt.scatter(noisyX[bestindex],noisyY[bestindex],c="blue",label="ransac_data")
+
+    #绘制折线图
+    x=np.array([0,20]).T
+    line1Y=np.dot(x,method1fit[0])+method1fit[1]
+    line2Y=np.dot(x,bestfit[0])+bestfit[1]
+    plt.plot(x,line1Y,label="line1")
+    plt.plot(x,line2Y,label="line2")
+    plt.legend()
+    plt.show()
+
+
+if __name__=="__main__":
+    #构造数据集
+    data,noisyX,noisyY=dataGeneration(500,100)
+    #初始化最小乘法模型
+    model=LinearLeastSquareModel(data)
+    #法一：直接用最小二乘法对数据处理
+    method1fit=model.fit(data)
+    #法二：开始进行ransac
+    bestfit,bestindex=ransac(data,model,50,1000,7e3,300)
+    #绘图
+    plot(data,bestindex,method1fit,bestfit,noisyX,noisyY)

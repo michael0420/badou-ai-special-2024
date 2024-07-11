@@ -1,0 +1,73 @@
+from tensorflow.keras.datasets import mnist
+import matplotlib.pyplot as plt
+
+(train_images,train_labels),(test_images,test_labels) = mnist.load_data()
+'''
+train_images and train_labes :训练集的图像和标签
+test_images and test_labels:测试集的图像和标签
+'''
+print('train_image.shape = ',train_images.shape)
+print('train_labels = ',train_labels)
+print('test_images.shape = ',test_images.shape)
+print('test_labels = ',test_labels)
+
+# def display_image(images,labels,num_images):
+#     plt.figure(figsize=(10,10))
+#     for i in range(num_images):
+#         plt.subplot(5, 4, i+1)
+#         plt.xticks([])
+#         plt.yticks([])
+#         plt.grid(False)
+#         plt.imshow(images[i], cmap=plt.cm.binary)
+#         plt.xlabel(labels[i])
+#     plt.show()
+# display_image(train_images,train_labels,20)
+'''打印第一张测试图片'''
+showimage = test_images[0]
+plt.imshow(showimage,cmap=plt.cm.binary)
+plt.show()
+
+'''
+3. 使用tensorflow.keras搭建一个有效识别图案的神经网络
+
+'''
+from tensorflow.keras import models
+from tensorflow.keras import layers
+#创建一个顺序模型
+network = models.Sequential()
+#添加第一层全连接层，包含512个神经元，激活函数为Relu，输入形状为28*28，即784个像素
+network.add(layers.Dense(512, activation= 'relu', input_shape=(28*28, )))
+#添加第二层全连接层，包含10个神经元，激活函数为softmax，用于输出10个类别的概率
+network.add(layers.Dense(10,activation='softmax'))
+# optimizer(优化器),root mean square propagation,自适应学习率方法，能够在训练神经网络时更有效地处理非平稳目标
+#作用是更新权重，以最小化损失函数
+#categorical crossentropy分类交叉熵，这种损失函数通常用于多分类任务。它计算预测类别概率分布和实际类别分布之间的差异
+#metrics是评估指标，是分类问题中的常用指标，特别适用于分类任务。
+network.compile(optimizer='rmsprop', loss='categorical_crossentropy',metrics=['accuracy'])
+'''
+4. 把数据输入到网络模型之前，把数据做归一化处理
+'''
+
+train_images_flattened = train_images.reshape((60000,28*28))
+train_images_float = train_images_flattened.astype('float32')/255
+test_images_flattened = test_images.reshape((10000,28*28))
+test_images_float = test_images_flattened.astype('float32')/255
+'''
+5. 使用keras进行神经网络训练时，通常需要将标签（目标值）进行编码处理，特别是对于多分类问题
+to_categorical函数可以将整型标签转化为独热编码（one-hot encoding）
+'''
+from tensorflow.keras.utils import to_categorical
+print("转换前的标签：", test_labels[0])
+train_labels_onehot = to_categorical(train_labels)
+test_labels_onehot = to_categorical(test_labels)
+print('after change',test_labels_onehot[0])
+
+'''
+测试数据输入，检验网络学习后的图片识别效果
+'''
+
+network.fit(train_images_float,train_labels_onehot,epochs=5,batch_size=128)
+
+test_loss,test_acc = network.evaluate(test_images_float,test_labels_onehot)
+
+print('测试精度： ',test_acc)

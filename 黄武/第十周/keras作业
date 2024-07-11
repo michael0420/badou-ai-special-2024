@@ -1,0 +1,110 @@
+from tensorflow.keras.datasets import mnist   #导入
+
+# 将 MNIST 数据集加载到 Python 环境中，并将数据分为训练集和测试集
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+print('train_images.shape = ',train_images.shape)
+print('tran_labels = ', train_labels)
+print('test_images.shape = ', test_images.shape)
+print('test_labels', test_labels)
+# 查看用于测试的第一张图片和用于训练的第一张图片
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(5,5))
+plt.subplot(1,2,1)  # 1行2列的第一个位置
+plt.imshow(train_images[0], cmap=plt.cm.binary)  # 显示测试集第一个数据
+plt.title('Train Image 1')
+plt.axis('off') #不显示坐标轴
+
+plt.subplot(1,2,2)   # 1行2列的第二个位置
+plt.imshow(test_images[0], cmap=plt.cm.binary)
+plt.title('Test Image 1')
+plt.axis('off') #不显示坐标轴
+
+plt.show()
+#从TensorFlow的Keras API中导入models 模块和layers模块
+
+from tensorflow.keras import models
+from tensorflow.keras import layers
+
+#创建Sequential 模型实例，是keras 中用于线性堆叠层的模型类型
+network = models.Sequential()
+
+#向Sequential 模型中添加一个全连接层（Dense层）
+#该层有512个神经元 激活函数为relu
+# 每个输入样本是一个长度为 784 的向量（28x28 像素的图像展平为一维数组）。
+network.add(layers.Dense(512,activation='relu',input_shape=(28*28,)))
+
+#构建数据处理层，有10个神经元，对应MNIST数据集中的10个类别（0到9 的数字）
+#激活函数为softmax
+network.add(layers.Dense(10,activation='softmax'))
+
+# 指定优化器为 RMSprop
+# 损失函数为 categorical_crossentropy
+#指定在训练过程中评估模型性能的指标，使用准确率（accuracy）
+network.compile(optimizer='rmsprop',loss='categorical_crossentropy',
+                metrics=['accuracy'])
+
+# 将训练集图像的形状从原始的 (60000, 28, 28) 调整为 (60000, 784)
+# 将像素值归一化到 0 到 1 的范围内
+train_images = train_images.reshape((60000,28*28))
+train_images = train_images.astype('float32')/255
+
+test_images = test_images.reshape((10000,28*28))
+test_images = test_images.astype('float32')/255
+
+#从kers模块中导入to_categorical
+from tensorflow.keras.utils import to_categorical
+
+# 打印原测试标签数组中的第一个值
+print('before change:',test_labels[0])
+
+
+'''
+将训练集的标签转换为 one-hot 编码,
+返回一个新的二维数组，其中每一行对应一个标签的 one-hot 编码,
+如果原始标签是 [3]，表示数字 3，那么转换为 one-hot 编码后，
+它将变为 [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]，其中索引为 3 的位置是 1，
+其余位置都是 0
+'''
+train_labels = to_categorical(train_labels)
+test_labels = to_categorical(test_labels)
+#打印出转换为 one-hot 编码后的测试标签数组中的第一个标签
+print('after change:',train_labels[0])
+
+'''
+把数据输入网络进行训练,
+network.fit(...): 这是调用模型的 fit 方法，它是用于训练模型的主要函数,
+fit 方法接受多个参数，用于配置训练过程.
+train_images: 这是训练数据的输入，应该是一个 NumPy 数组，包含了训练集的所有图像数据。
+train_labels:训练数据的标签，根据之前的步骤，这些标签已经被转换为 one-hot 编码。
+epochs=5: 这个参数指定了训练模型的迭代次数,整个训练集将被用于训练 5 次。
+batch_size=128: 这个参数定义了每次迭代时使用的样本数量。
+'''
+
+network.fit(train_images,train_labels,epochs=5,batch_size=128)
+
+'''
+测试数据输入，返回两个主要的指标：损失值和准确率。
+verbose=1 参数控制着评估过程中的输出信息量。
+设置为 1 表示在评估过程中显示进度条，可以实时看到评估的进度。
+'''
+test_loss,test_acc = network.evaluate(test_images,test_labels,verbose=1)
+
+print(test_loss)
+print('test_acc:',test_acc)
+
+'''
+输入一张手写数字图片到网络中，看看它的识别效果
+'''
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+digit = test_images[1]
+plt.imshow(digit, cmap=plt.cm.binary)
+plt.show()
+test_images = test_images.reshape((10000, 28*28))
+res = network.predict(test_images)
+
+for i in range(res[1].shape[0]):
+    if (res[1][i] == 1):
+        print("the number for the picture is : ", i)
+        break
