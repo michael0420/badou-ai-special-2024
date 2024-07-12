@@ -1,0 +1,3 @@
+pytorch 实现mnist分类的简单神经网络
+用tensorflow 实现cifar10 数据分类
+用Alexnet 网络实现猫狗分类
