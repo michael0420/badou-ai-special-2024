@@ -43,17 +43,46 @@ class Model:
         for epoch in range(epoches):
             running_loss = 0.0   #在每次训练轮开始时，将运行损失初始化为 0
             """
-            `enumerate(train_loader, 0)` 是 Python 中的一个函数，用于将一个可迭代对象转换为包含索引和元素的元组序列。
+            `enumerate(iterable, start=0)` 用于将一个可迭代对象转换为包含索引和元素的元组序列。
+                                           函数返回一个枚举对象，可以通过迭代来访问其中的元素。每个元素都是一个包含索引和元素本身的元组。
              在这个例子中，enumerate(train_loader, 0)` 将从索引 0 开始，为 `train_loader` 中的每个元素生成一个包含索引和元素的元组。
+             i 表示当前批次的索引，data 包含了当前批次的输入数据 inputs 和对应的标签 labels
             """
             for i, data in enumerate(train_loader, 0):  # 遍历训练数据加载器 train_loader 中的数据批次
                 inputs, labels = data  # 获取输入数据 inputs 和标签数据
+                '''
+                要确定有多少个批次，可以使用以下公式：
+                    批次数量 = 总样本数 ÷ 每个批次的样本数                    
+                    假设总样本数为 `N`，每个批次的样本数为 `batch_size`，则批次数量可以表示为： 批次数量 = N ÷ batch_size
+                    由于 `batch_sampler=1875`，这意味着每个批次的样本索引范围是从 0 到 1874。因此，每个批次的样本数约为 1875。                    
+                    批次数量 = 60000 ÷ 1875 ≈ 32  所以，根据提供的信息，大约有 32 个批次。
+                inputs -> {Tensor:32}
+                tensor([[[[0., 0., 0.,  ..., 0., 0., 0.],
+                          [0., 0., 0.,  ..., 0., 0., 0.],
+                          [0., 0., 0.,  ..., 0., 0., 0.],
+                          ...,
+                          [0., 0., 0.,  ..., 0., 0., 0.],
+                          [0., 0., 0.,  ..., 0., 0., 0.],
+                          [0., 0., 0.,  ..., 0., 0., 0.]]],
+                          ......
+                labels -> {Tensor:32}
+                tensor([8, 0, 7, 6, 9, 8, 0, 8, 1, 3, 3, 4, 9, 5, 9, 1, 8, 2, 3, 0, 8, 4, 3, 8,4, 0, 8, 0, 8, 6, 3, 0])
+                '''
 
                 self.optimizer.zero_grad() # 在每次迭代之前，将优化器的梯度清零，以避免梯度累积。
 
                 # forward + backward + optimize
                 outputs = self.net(inputs)  # 正向过程:  输入  经过正向过程  输出 （softmax结果）
-                loss = self.cost(outputs, labels)  # 计算损失函数  (计算输出结果与真实标签之间的损失函数值 loss)
+                ''' 
+                outputs -> {Tensor:32}
+                tensor([
+                        [0.0988, 0.1027, 0.0990, 0.0966, 0.1050, 0.0964, 0.1020, 0.0921, 0.1035,0.1040],
+                        ... 
+                        [0.1017, 0.0983, 0.0981, 0.0948, 0.1002, 0.1020, 0.0994, 0.0939, 0.1013,0.1105]], 
+                grad_fn=<SoftmaxBackward0>)
+                '''
+                # 计算损失函数  (计算输出结果与真实标签之间的损失函数值 loss)  tensor(2.3024, grad_fn=<NllLossBackward0>)
+                loss = self.cost(outputs, labels)
                 """
                 `loss.backward()` 是 PyTorch 中的一个函数，用于计算损失函数的梯度。
                     在深度学习中，我们通过计算损失函数来衡量模型的预测结果与真实标签之间的差异。然后，我们使用反向传播算法来计算损失函数对模型参数的梯度，以便更新模型的参数，从而使模型能够更好地拟合数据。
@@ -82,11 +111,20 @@ class Model:
                     通过累加每个批次的损失值，可以得到训练过程中的总损失。这对于监控训练进度、调整超参数以及评估模型性能都非常有用。
                 """
                 running_loss += loss.item() # 将当前批次的损失值累加到运行损失中。
-                if i % 100 == 0:  # 每经过 100 个批次，打印一次训练信息，包括当前训练轮数、进度百分比、平均损失等。
-                    print('[epoch %d, %.2f%%] loss: %.3f' %
-                          (epoch + 1, (i + 1) * 1. / len(train_loader), running_loss / 100))
+                if i % 100 == 0:  # 每经过 100 个批次，打印一次训练信息，包括 [当前训练轮数、进度百分比] 、 平均损失
+                    print('[epoch %d, %.2f%%] loss: %.3f' % (epoch + 1,  (i + 1) * 1. / len(train_loader),  running_loss / 100)) # len(train_loader) = 1874
                     running_loss = 0.0
-
+                '''
+                [epoch 1, 0.00%] loss: 0.023
+                [epoch 1, 0.05%] loss: 1.810
+                [epoch 1, 0.11%] loss: 1.587
+                ...
+                [epoch 2, 0.00%] loss: 0.015
+                ...
+                [epoch 3, 0.96%] loss: 1.501
+                Finished Training
+                Evaluating ...
+                '''
         print('Finished Training')
 
 
@@ -114,36 +152,58 @@ class Model:
                 correct += (predicted == labels).sum().item()  # 统计正确率
 
         print('Accuracy of the network on the test images: %d %%' % (100 * correct / total))
+        # Accuracy of the network on the test images: 95 %
 
 
 """
-加载 MNIST 数据集: 
-    1. `transforms.Compose`：这是 PyTorch 中的一个函数，用于将一系列数据变换组合在一起。在这里，我们使用了两个变换：
-        - `transforms.ToTensor()`：将数据转换为张量。
-        - `transforms.Normalize([0, ], [1, ])`：对数据进行标准化，将均值设置为 0，标准差设置为 1。
-        
-    2. `torchvision.datasets.MNIST`：这是 PyTorch 中提供的 MNIST 数据集加载器。 通过设置 `root` 参数指定数据集的保存路径，`train=True` 表示加载训练集，
-                                    `download=True` 表示如果数据集不存在则自动下载，`transform=transform` 应用上述定义的变换。
-    
-    3. `torch.utils.data.DataLoader`：这是 PyTorch 中的数据加载器，用于将数据集分成批次并进行加载。
-                                     通过设置 `batch_size` 参数指定每个批次的大小，`shuffle=True` 表示在每个 epoch 时打乱数据顺序，`num_workers=2` 指定使用的线程数。
-    
-    4. 函数返回两个数据加载器：`trainloader` 用于加载训练集，`testloader` 用于加载测试集。
-    
+加载 MNIST 数据集   
 """
 def mnist_load_data():
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize([0, ], [1, ])])
+    '''
+        1. `transforms.Compose`：这是 PyTorch 中的一个函数，用于将一系列数据变换组合在一起。在这里，我们使用了两个变换：
+            - `transforms.ToTensor()`：将数据转换为张量。
+            - `transforms.Normalize([0, ], [1, ])`：对数据进行标准化，将均值设置为 0，标准差设置为 1。
+    '''
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0, ], [1, ])])
 
-    trainset = torchvision.datasets.MNIST(root='./data', train=True,
-                                          download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=32,
-                                              shuffle=True, num_workers=2)
+    '''
+        2. `torchvision.datasets.MNIST`：这是 PyTorch 中提供的 MNIST 数据集加载器。 通过设置 `root` 参数指定数据集的保存路径，`train=True` 表示加载训练集，
+                                        `download=True` 表示如果数据集不存在则自动下载，`transform=transform` 应用上述定义的变换。
+                - `root='./data'`：指定数据集的根目录，即数据将被下载到的位置。在这里，数据将被下载到当前目录下的 `data` 文件夹中。
+                - `train=True`：表示加载训练集。(False`：表示加载测试集，而不是训练集)
+                - `download=True`：如果数据集在指定的根目录下不存在，将自动下载数据集。
+                - `transform=transform`：应用一个变换函数到数据集的样本上。在这里，`transform` 是之前定义的包含 `ToTensor()` 和 `Normalize()` 变换的 `Compose` 对象。
+            通过执行这段代码，将下载 MNIST 训练集并将其存储在指定的根目录下。同时，对每个样本应用指定的变换。这样，就可以使用 `trainset` 来访问训练集的样本和标签，例如通过迭代器或数据加载器来进行训练。
+                            (".pt" 文件通常是 PyTorch 模型文件的扩展名。这些文件包含了经过训练的神经网络模型的参数和结构信息。使用 PyTorch 的加载函数 torch.load() 来加载 ".pt" 文件。)
+            `trainset` 的数据格式如下：
+                - `trainset.data`：这是一个形状为 `(60000, 28, 28)` 的张量，表示训练集的图像数据。其中，`60000` 是训练集的样本数量，`28` 是图像的高度和宽度。
+                - `trainset.targets`：这是一个形状为 `(60000,)` 的张量，表示训练集的标签数据。标签是一个整数，表示对应的图像所属的类别。
+            此外，`trainset` 还提供了一些其他方法和属性，例如 `trainset.classes` 表示类别列表，`trainset.transform` 表示应用的变换等。
+    '''
+    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    '''
+        3. `torch.utils.data.DataLoader`：这是 PyTorch 中的数据加载器，用于将数据集分成批次并进行加载。
+                                          通过设置 `batch_size` 参数指定每个批次的大小，`shuffle=True` 表示在每个 epoch 时打乱数据顺序，`num_workers=2` 指定使用的线程数。
+                                                  
+        - `trainset`：这是之前创建的 MNIST 训练集对象。
+        - `batch_size=32`：指定每个批次的大小为 32。这意味着每次迭代 `trainloader` 时，将返回一个包含 32 个样本的批次。
+        - `shuffle=True`：表示在每个 epoch 开始时打乱数据顺序。这样可以增加数据的随机性，有助于模型的训练。
+        - `num_workers=2`：指定使用 2 个工作线程来加载数据。这可以提高数据加载的速度，特别是在处理大规模数据集时。
+        
+        通过使用数据加载器 `trainloader`，你可以方便地按批次获取 MNIST 训练集的数据，并将其用于模型的训练。 在训练模型时，你可以通过迭代 `trainloader` 来获取批次数据，并将其输入到模型中进行训练。例如：
+        ```python
+        for batch_idx, (data, target) in enumerate(trainloader):
+            # 在这里进行模型的训练
+            pass
+        ```
+    '''
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True, num_workers=2)
 
-    testset = torchvision.datasets.MNIST(root='./data', train=False,
-                                         download=True, transform=transform)
+    testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=32, shuffle=True, num_workers=2)
+    '''
+        4. 函数返回两个数据加载器：`trainloader` 用于加载训练集，`testloader` 用于加载测试集。 
+    '''
     return trainloader, testloader
 
 
@@ -169,9 +229,9 @@ class MnistNet(torch.nn.Module):
             计算过程：在全连接神经网络中，计算当前层的神经元输出时，需要将前一层的所有神经元输出与对应的权重相乘，然后将结果相加，再加上偏置项。
         """
         super(MnistNet, self).__init__()
-        self.fc1 = torch.nn.Linear(28 * 28, 512)
-        self.fc2 = torch.nn.Linear(512, 512)
-        self.fc3 = torch.nn.Linear(512, 10)
+        self.fc1 = torch.nn.Linear(28 * 28, 512)  # Linear(in_features=784, out_features=512, bias=True)    bias{parameter:512} weight{parameter:512}
+        self.fc2 = torch.nn.Linear(512, 512)  # Linear(in_features=512, out_features=512, bias=True)        bias{parameter:512} weight{parameter:512}
+        self.fc3 = torch.nn.Linear(512, 10)  # Linear(in_features=512, out_features=10, bias=True)          bias{parameter:10} weight{parameter:10}
 
     # 定义参数不需要训练的层   将参数不需要训练的层在 forward 方法里(激活函数、Relu、+ - * /  ...)
     def forward(self, x):

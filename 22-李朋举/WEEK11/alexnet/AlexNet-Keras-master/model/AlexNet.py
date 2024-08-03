@@ -6,8 +6,20 @@ from keras.optimizers import Adam
 
 def AlexNet(input_shape=(224,224,3),output_shape=2):
     # AlexNet
+    '''
+    `model = Sequential()` 是 Keras 中用于创建顺序模型的代码。
+    在 Keras 中，`Sequential` 模型是一种线性的、层叠的模型结构，其中的层按照顺序依次堆叠。通过将层添加到 `Sequential` 模型中，可以构建深度神经网络。
+    以下是使用 `Sequential` 模型的一般步骤：
+        1. 创建 `Sequential` 模型对象：使用 `Sequential()` 函数创建一个空的 `Sequential` 模型对象。
+        2. 添加层：使用 `model.add()` 方法向模型中添加层。可以根据需要添加各种类型的层，如卷积层、全连接层、池化层等。
+        3. 编译模型：使用 `model.compile()` 方法编译模型。在编译模型时，需要指定优化器、损失函数和评估指标等。
+        4. 训练模型：使用 `model.fit()` 方法训练模型。在训练模型时，需要提供训练数据、训练轮数、批量大小等参数。
+        5. 评估模型：使用 `model.evaluate()` 方法评估模型的性能。在评估模型时，需要提供测试数据和评估指标等。
+    通过以上步骤，可以使用 `Sequential` 模型构建、训练和评估深度神经网络。
+    '''
     model = Sequential()
     # 1. 原始图片resize到(224, 224, 3)
+
     # 2. 使用步长为4x4，大小为11的卷积核对图像进行卷积，输出的特征层为96层，输出的shape为(55,55,96)；
     # 所建模型后输出为48特征层
     '''

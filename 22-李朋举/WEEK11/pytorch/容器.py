@@ -11,6 +11,8 @@
 通过这样的定义，模型将输入的 3 维数据经过两个全连接层的变换，最后通过 Softmax 输出层得到 2 维的概率分布。
 请注意，这只是一个简单的模型示例，实际应用中可能需要根据具体问题进行更复杂的模型设计和调整。此外，还需要进行训练、优化和评估等步骤来提高模型的性能。
 """
+from torch import nn
+
 model = nn.Sequential()  # 空模型
 model.add_module('fc1', nn.Linear(3,4))  # 加入全连接层
 model.add_module('fc2', nn.Linear(4,2))  # 加入全连接层

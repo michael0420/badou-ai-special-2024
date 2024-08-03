@@ -14,6 +14,8 @@ import tensorflow as tf
 slim = tf.contrib.slim
 
 
+# 1.一张原始图片被resize到(224,224,3)
+
 def vgg_16(inputs,  # 输入张量，通常是图像数据
            num_classes=1000,  # 类别数，即模型要预测的类别数量
            is_training=True,  # 训练模式或测试模式的标志
@@ -28,7 +30,8 @@ def vgg_16(inputs,  # 输入张量，通常是图像数据
     with tf.variable_scope(scope, 'vgg_16', [inputs]):
         # 建立vgg_16的网络
 
-        # conv1两次[3,3]卷积网络，输出的特征层为64，输出为(224,224,64)
+        # 2. conv1两次[3,3]卷积网络，输出的特征层为64，输出为(224,224,64)
+        #    -> Tensor("vgg_16/conv1/conv1_2/Relu:0", shape=(1, 224, 224, 64), dtype=float32)
         '''
         在输入张量上应用两个卷积层，每个卷积层使用 64 个大小为 3x3 的卷积核。通过重复这个卷积操作，可以提取输入图像的特征:
             inputs：这是输入张量，通常是图像数据。     2：表示要重复的次数。      slim.conv2d：这是一个卷积层操作，用于对输入进行卷积运算。
@@ -36,6 +39,7 @@ def vgg_16(inputs,  # 输入张量，通常是图像数据
         '''
         net = slim.repeat(inputs, 2, slim.conv2d, 64, [3, 3], scope='conv1')
         # 2X2最大池化，输出net为(112,112,64)
+        #    -> Tensor("vgg_16/pool1/MaxPool:0", shape=(1, 112, 112, 64), dtype=float32)
         '''
         使用TensorFlow 的 `slim` 库中的 `max_pool2d` 函数来执行最大池化操作。
             - `net`：这是输入的张量，通常是卷积层的输出。
@@ -43,45 +47,56 @@ def vgg_16(inputs,  # 输入张量，通常是图像数据
             - `scope='pool1'`：这是为池化操作设置的作用域名称。
         最大池化操作的作用是对输入张量进行下采样，通过选择池化窗口内的最大值来减少数据的维度，同时保留重要的特征信息。这样可以降低计算量、减少过拟合的风险，并增加模型的鲁棒性。
         在这个例子中，池化窗口的大小为 2x2，意味着输入张量的高度和宽度将分别减少一半。池化操作会在输入张量的每个通道上独立进行。
-        通过设置作用域名称，可以更好地组织和管理模型的结构，方便在后续的代码中引用和操作这个池化层。
+        通过设置作用域名称，可以更好地组织和管理模型的结构，方便在后续的代码中引用和操作这个池化层。        
         '''
         net = slim.max_pool2d(net, [2, 2], scope='pool1')
 
-        # conv2两次[3,3]卷积网络，输出的特征层为128，输出net为(112,112,128)
+        # 3. conv2两次[3,3]卷积网络，输出的特征层为128，输出net为(112,112,128)
+        #    -> Tensor("vgg_16/conv2/conv2_2/Relu:0", shape=(1, 112, 112, 128), dtype=float32)
         net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
         # 2X2最大池化，输出net为(56,56,128)
+        #    -> Tensor("vgg_16/pool2/MaxPool:0", shape=(1, 56, 56, 128), dtype=float32)
         net = slim.max_pool2d(net, [2, 2], scope='pool2')
 
-        # conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(56,56,256)
+        # 4. conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(56,56,256)
+        #    -> Tensor("vgg_16/conv3/conv3_3/Relu:0", shape=(1, 56, 56, 256), dtype=float32)
         net = slim.repeat(net, 3, slim.conv2d, 256, [3, 3], scope='conv3')
         # 2X2最大池化，输出net为(28,28,256)
+        #    -> Tensor("vgg_16/pool3/MaxPool:0", shape=(1, 28, 28, 256), dtype=float32)
         net = slim.max_pool2d(net, [2, 2], scope='pool3')
 
-        # conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(28,28,512)
+        # 5. conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(28,28,512)
+        #    -> Tensor("vgg_16/conv4/conv4_3/Relu:0", shape=(1, 28, 28, 512), dtype=float32)
         net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
         # 2X2最大池化，输出net为(14,14,512)
+        #    -> Tensor("vgg_16/conv4/conv4_3/Relu:0", shape=(1, 28, 28, 512), dtype=float32)
         net = slim.max_pool2d(net, [2, 2], scope='pool4')
 
-        # conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(14,14,512)
+        # 6. conv3三次[3,3]卷积网络，输出的特征层为256，输出net为(14,14,512)
+        #    -> Tensor("vgg_16/conv5/conv5_3/Relu:0", shape=(1, 14, 14, 512), dtype=float32)
         net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
         # 2X2最大池化，输出net为(7,7,512)
+        #    -> Tensor("vgg_16/pool5/MaxPool:0", shape=(1, 7, 7, 512), dtype=float32)
         net = slim.max_pool2d(net, [2, 2], scope='pool5')
 
-        # 利用卷积的方式模拟全连接层，效果等同，输出net为(1,1,4096)
+        # 7. 利用卷积的方式模拟全连接层，效果等同，输出net为(1,1,4096)
+        #    -> Tensor("vgg_16/fc6/Relu:0", shape=(1, 1, 1, 4096), dtype=float32)
         net = slim.conv2d(net, 4096, [7, 7], padding='VALID', scope='fc6')
-        net = slim.dropout(net, dropout_keep_prob, is_training=is_training,
-                           scope='dropout6')
+        #    -> Tensor("vgg_16/dropout6/dropout/mul_1:0", shape=(1, 1, 1, 4096), dtype=float32)
+        net = slim.dropout(net, dropout_keep_prob, is_training=is_training, scope='dropout6')
         # 利用卷积的方式模拟全连接层，效果等同，输出net为(1,1,4096)
+        # -> Tensor("vgg_16/fc7/Relu:0", shape=(1, 1, 1, 4096), dtype=float32)
         net = slim.conv2d(net, 4096, [1, 1], scope='fc7')
+        # -> Tensor("vgg_16/dropout7/dropout/mul_1:0", shape=(1, 1, 1, 4096), dtype=float32)
         net = slim.dropout(net, dropout_keep_prob, is_training=is_training,
                            scope='dropout7')
-        # 利用卷积的方式模拟全连接层，效果等同，输出net为(1,1,1000)
+        # 8. 利用卷积的方式模拟全连接层，效果等同，输出net为(1,1,1000)  Tensor("vgg_16/fc8/BiasAdd:0", shape=(1, 1, 1, 1000), dtype=float32)
         net = slim.conv2d(net, num_classes, [1, 1],
                           activation_fn=None,
                           normalizer_fn=None,
                           scope='fc8')
 
-        # 由于用卷积的方式模拟全连接层，所以输出需要平铺
+        # 由于用卷积的方式模拟全连接层，所以输出需要平铺  Tensor("vgg_16/fc8/squeezed:0", shape=(1, 1000), dtype=float32)
         if spatial_squeeze:
             net = tf.squeeze(net, [1, 2], name='fc8/squeezed')
         return net

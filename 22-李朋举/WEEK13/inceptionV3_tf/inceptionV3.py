@@ -28,8 +28,6 @@ from keras.preprocessing import image
     - `name`：字符串，指定层的名称。如果未提供，则自动生成一个唯一的名称。
 函数的输出是经过卷积、批量归一化和 ReLU 激活处理后的张量。
 '''
-
-
 def conv2d_bn(x,
               filters,
               num_row,
@@ -57,33 +55,41 @@ def conv2d_bn(x,
 def InceptionV3(input_shape=[299, 299, 3], classes=1000):
     img_input = Input(shape=input_shape)
 
+    # 1. conv   229x229x3 -> 3x3/2    =  Tensor("activation_1/Relu:0", shape=(?, 149, 149, 32), dtype=float32)
     x = conv2d_bn(img_input, 32, 3, 3, strides=(2, 2), padding='valid')
+    # 2. conv   149x149x32 -> 3x3/1   =  Tensor("activation_2/Relu:0", shape=(?, 147, 147, 32), dtype=float32)
     x = conv2d_bn(x, 32, 3, 3, padding='valid')
+    # 3. conv padded  147x147x32 -> 3x3/1  =  Tensor("activation_3/Relu:0", shape=(?, 147, 147, 64), dtype=float32)
     x = conv2d_bn(x, 64, 3, 3)
+    # 4. pool 147x147x64 -> 3x3/2  =  Tensor("max_pooling2d_1/MaxPool:0", shape=(?, 73, 73, 64), dtype=float32)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
-
+    # 5. conv 73x73x64 -> 3x3/1  =  Tensor("activation_4/Relu:0", shape=(?, 73, 73, 80), dtype=float32)
     x = conv2d_bn(x, 80, 1, 1, padding='valid')
+    # 6. conv 73x73x80 -> 3x3/2  = Tensor("activation_5/Relu:0", shape=(?, 71, 71, 192), dtype=float32)
     x = conv2d_bn(x, 192, 3, 3, padding='valid')
+    # 7. 71x71x192 -> 3x3/1  =  Tensor("max_pooling2d_2/MaxPool:0", shape=(?, 35, 35, 192), dtype=float32)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
-    # ---------------------------------------#
+    # ------------------------------------------------------#
     #   Block1 35x35 (尺寸没变，通道数改变)
     #
     #   35 x 35 x 192  -> 35 x 35 x 288
-    # ---------------------------------------#
+    #
+    #   Block1的 part1、part2、part3结构相同,输入不同
+    # ------------------------------------------------------#
 
     # Block1 part1
-    # 35 x 35 x 192 -> 35 x 35 x 256
-    branch1x1 = conv2d_bn(x, 64, 1, 1)  # 做1X1卷积
+    # 35 x 35 x 192 -> 35 x 35 x 256   = Tensor("activation_6/Relu:0", shape=(?, 35, 35, 64), dtype=float32)
+    branch1x1 = conv2d_bn(x, 64, 1, 1)  # 分支1  做1X1卷积
 
-    branch5x5 = conv2d_bn(x, 48, 1, 1)  # 5X5 = 1X1 -> 5x5
+    branch5x5 = conv2d_bn(x, 48, 1, 1)  # 分支4  先做1x1再做2个3x3   5X5 = 1X1 -> 5x5(2个3x3)
     branch5x5 = conv2d_bn(branch5x5, 64, 5, 5)
 
-    branch3x3dbl = conv2d_bn(x, 64, 1, 1)     # 5X5 = 1X1 -> 5x5 (2个3X3)
+    branch3x3dbl = conv2d_bn(x, 64, 1, 1)     # 分支3 5X5 = 1X1 ->  2个3X3(5x5)
     branch3x3dbl = conv2d_bn(branch3x3dbl, 96, 3, 3)
     branch3x3dbl = conv2d_bn(branch3x3dbl, 96, 3, 3)
 
-    branch_pool = AveragePooling2D((3, 3), strides=(1, 1), padding='same')(x)
+    branch_pool = AveragePooling2D((3, 3), strides=(1, 1), padding='same')(x)  # 分支2 先做pool再做1x1
     branch_pool = conv2d_bn(branch_pool, 32, 1, 1)
 
     # 64+64+96+32 = 256  nhwc-0123
@@ -147,30 +153,28 @@ def InceptionV3(input_shape=[299, 299, 3], classes=1000):
 
     branch3x3dbl = conv2d_bn(x, 64, 1, 1)
     branch3x3dbl = conv2d_bn(branch3x3dbl, 96, 3, 3)
-    branch3x3dbl = conv2d_bn(
-        branch3x3dbl, 96, 3, 3, strides=(2, 2), padding='valid')
+    branch3x3dbl = conv2d_bn(branch3x3dbl, 96, 3, 3, strides=(2, 2), padding='valid')
 
     branch_pool = MaxPooling2D((3, 3), strides=(2, 2))(x)
-    x = layers.concatenate(
-        [branch3x3, branch3x3dbl, branch_pool], axis=3, name='mixed3')
+    x = layers.concatenate([branch3x3, branch3x3dbl, branch_pool], axis=3, name='mixed3')
 
     # Block2 part2  7x7卷积(V3改变的结构)
     # 17 x 17 x 768 -> 17 x 17 x 768
 
     '''
-    使用 1x1 的卷积核进行卷积操作，输出通道数为 192
+    分支1 使用 1x1 的卷积核进行卷积操作，输出通道数为 192
     '''
     branch1x1 = conv2d_bn(x, 192, 1, 1)
 
     '''
-    使用 1x1 的卷积核进行卷积操作，输出通道数为 128。然后，使用 1x7 的卷积核进行卷积操作，输出通道数为 128。最后，使用 7x1 的卷积核进行卷积操作，输出通道数为 192。
+    分支3 使用 1x1 的卷积核进行卷积操作，输出通道数为 128。然后，使用 1x7 的卷积核进行卷积操作，输出通道数为 128。最后，使用 7x1 的卷积核进行卷积操作，输出通道数为 192。
     '''
     branch7x7 = conv2d_bn(x, 128, 1, 1)
     branch7x7 = conv2d_bn(branch7x7, 128, 1, 7)
     branch7x7 = conv2d_bn(branch7x7, 192, 7, 1)
 
     '''
-    使用 1x1 的卷积核进行卷积操作，输出通道数为 128。然后，使用 7x1 的卷积核进行卷积操作，输出通道数为 128。接着，使用 1x7 的卷积核进行卷积操作，输出通道数为 128。
+    分支4 使用 1x1 的卷积核进行卷积操作，输出通道数为 128。然后，使用 7x1 的卷积核进行卷积操作，输出通道数为 128。接着，使用 1x7 的卷积核进行卷积操作，输出通道数为 128。
     然后，使用 7x1 的卷积核进行卷积操作，输出通道数为 128。最后，使用 1x7 的卷积核进行卷积操作，输出通道数为 192。
     '''
     branch7x7dbl = conv2d_bn(x, 128, 1, 1)
@@ -179,7 +183,7 @@ def InceptionV3(input_shape=[299, 299, 3], classes=1000):
     branch7x7dbl = conv2d_bn(branch7x7dbl, 128, 7, 1)
     branch7x7dbl = conv2d_bn(branch7x7dbl, 192, 1, 7)
     '''
-    使用平均池化操作对输入图像进行下采样，池化窗口大小为 3x3，步长为 1。然后，使用 1x1 的卷积核进行卷积操作，输出通道数为 192。
+    分支2 使用平均池化操作对输入图像进行下采样，池化窗口大小为 3x3，步长为 1。然后，使用 1x1 的卷积核进行卷积操作，输出通道数为 192。
     '''
     branch_pool = AveragePooling2D((3, 3), strides=(1, 1), padding='same')(x)
     branch_pool = conv2d_bn(branch_pool, 192, 1, 1)
@@ -312,3 +316,12 @@ if __name__ == '__main__':
 
     preds = model.predict(x)
     print('Predicted:', decode_predictions(preds))
+    '''
+    Predicted: [
+                [('n02504458', 'African_elephant', 0.5918915),
+                 ('n01871265', 'tusker', 0.3215215), 
+                 ('n02504013', 'Indian_elephant', 0.06038531), 
+                 ('n03075370', 'combination_lock', 0.0002514217),
+                 ('n02391049', 'zebra', 0.0001775555)]
+                ]
+    '''

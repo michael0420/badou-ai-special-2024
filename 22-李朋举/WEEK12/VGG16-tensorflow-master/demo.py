@@ -10,8 +10,8 @@ tf.disable_v2_behavior()
 img1 = utils.load_image("./test_data/dog.jpg")
 
 # 对输入的图片进行resize，使其shape满足(-1,224,224,3=-0987654321`
-inputs = tf.placeholder(tf.float32,[None,None,3])
-resized_img = utils.resize_image(inputs, (224, 224))
+inputs = tf.placeholder(tf.float32,[None,None,3])  # Tensor("Placeholder:0", shape=(?, ?, 3), dtype=float32)
+resized_img = utils.resize_image(inputs, (224, 224))  # Tensor("resize_image/Reshape:0", shape=(1, 224, 224, 3), dtype=float32)
 
 # 建立网络结构
 prediction = vgg16.vgg_16(resized_img)
@@ -39,10 +39,17 @@ saver = tf.train.Saver()
 '''
 saver.restore(sess, ckpt_filename)
 
-# 最后结果进行softmax预测
+# 最后结果进行softmax预测  Tensor("Softmax:0", shape=(1, 1000), dtype=float32)
 pro = tf.nn.softmax(prediction)
+# [[6.51762010e-13 4.96844796e-12 7.08291173e-13 2.43432965e-12,  4.76428862e-11 1.37680770e-11 9.13035598e-13 3.63949485e-13,  2.35147665e-12 2.17416620e-13 8.91054876e-14 1.34381080e-12,  4.90183957e-13 2.10277824e-12 1.00803873e-13 9.42346787e-14,  3.0939
 pre = sess.run(pro,feed_dict={inputs:img1})
 
 # 打印预测结果
 print("result: ")
 utils.print_prob(pre[0], './synset.txt')
+
+'''
+result: 
+('Top1: ', 'n02099601 golden retriever', 0.9961261)
+('Top5: ', [('n02099601 golden retriever', 0.9961261), ('n02099712 Labrador retriever', 0.0031311843), ('n02099267 flat-coated retriever', 0.00031133764), ('n02102480 Sussex spaniel', 0.00020649601), ('n02091831 Saluki, gazelle hound', 4.5306377e-05)])
+'''
