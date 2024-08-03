@@ -58,7 +58,6 @@ class Model:
                 y.clear()
 
     def _InitGPU(self):
-
         os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
         os.environ["CL_GPUOFFSET"] = "1"
 
