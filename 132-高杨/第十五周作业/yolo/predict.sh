@@ -1,0 +1,1 @@
+python detect.py --image_file ./img2.jpg
